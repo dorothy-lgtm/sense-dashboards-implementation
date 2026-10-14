@@ -28,7 +28,7 @@ function donut(items, { centre = "", unit = "records", maxSlices = 7 } = {}) {
 
 /** Line chart: categories (x labels), series = [{name, values}] */
 function lineChart(categories, series, { height = 220, fmt = num } = {}) {
-  const W = 640, H = height, padL = 44, padR = 16, padT = 14, padB = 30;
+  const W = 640, H = height, padL = 44, padR = 24, padT = 18, padB = 30;
   const all = series.flatMap(s => s.values).filter(isNum);
   if (!all.length || !categories.length) return `<p class="empty">No data</p>`;
   const max = Math.max(1, ...all) * 1.08;
@@ -37,7 +37,7 @@ function lineChart(categories, series, { height = 220, fmt = num } = {}) {
   const ticks = [0, max / 2, max].map(v => Math.round(v));
   let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img">`;
   ticks.forEach(t => { svg += `<line x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${padL - 6}" y="${y(t) + 4}" text-anchor="end">${num(t)}</text>`; });
-  categories.forEach((c, i) => { svg += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(c)}</text>`; });
+  categories.forEach((c, i) => { svg += `<text x="${x(i)}" y="${H - 8}" text-anchor="${categories.length > 1 && i === 0 ? "start" : categories.length > 1 && i === categories.length - 1 ? "end" : "middle"}" style="font-size:12px">${esc(c)}</text>`; });
   series.forEach((s, si) => {
     const pts = s.values.map((v, i) => isNum(v) ? `${x(i)},${y(v)}` : null).filter(Boolean);
     svg += `<polyline points="${pts.join(" ")}" fill="none" stroke="${SERIES[si]}" stroke-width="2"/>`;
@@ -65,7 +65,7 @@ function groupedBars(categories, series, { height = 220, fmt = num } = {}) {
       const bx = gx + si * (bw + 2);
       svg += `<rect x="${bx}" y="${y(v)}" width="${bw}" height="${Math.max(0, y(0) - y(v))}" rx="3" fill="${SERIES[si]}"><title>${esc(s.name)} · ${esc(c)}: ${fmt(v)}</title></rect><text x="${bx + bw / 2}" y="${y(v) - 5}" text-anchor="middle" style="fill:var(--ink-2)">${fmt(v)}</text>`;
     });
-    svg += `<text x="${padL + i * gw + gw / 2}" y="${H - 8}" text-anchor="middle">${esc(c)}</text>`;
+    svg += `<text x="${padL + i * gw + gw / 2}" y="${H - 8}" text-anchor="middle" style="font-size:12px">${esc(c)}</text>`;
   });
   svg += `<line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" stroke="var(--axis)"/></svg>`;
   return `<div class="legend">${series.map((s, i) => `<span class="dot" style="background:${SERIES[i]}"></span> ${esc(s.name)} &nbsp;`).join("")}</div>${svg}`;
