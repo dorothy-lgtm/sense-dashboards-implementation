@@ -44,12 +44,13 @@ jobs:
         run: |
           python scripts/summarize.py
           python scripts/roster.py
+          python scripts/metrics.py
 
       - name: Commit refreshed summary
         run: |
           git config user.name "sense-dashboards[bot]"
           git config user.email "sense-dashboards@users.noreply.github.com"
-          git add site/data/summary.json site/data/roster.json
+          git add site/data/summary.json site/data/roster.json site/data/metrics.json
           if git diff --cached --quiet; then
             echo "No change in summary"
           else

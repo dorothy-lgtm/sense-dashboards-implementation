@@ -71,6 +71,18 @@ SURVEYS = {
         {"type": "geopoint", "name": "geo_location", "$xpath": "School_Identification_grp/geo_location", "label": ["GPS"]},
         {"type": "text", "name": "nurse_name", "$xpath": "school_health_personnel_grp/nurse_name", "label": ["Nurse"]},
         {"type": "text", "name": "nurse_contact", "$xpath": "school_health_personnel_grp/nurse_contact", "label": ["Nurse phone"]},
+        {"type": "select_one", "name": "nurse_qualification", "$xpath": "school_health_personnel_grp/nurse_qualification", "label": ["Nurse qualification"], "select_from_list_name": "quals"},
+        {"type": "select_one", "name": "dedicated_sickbay", "$xpath": "school_health_personnel_grp/dedicated_sickbay", "label": ["Dedicated sick bay"], "select_from_list_name": "yn"},
+        {"type": "select_multiple", "name": "test_supplies", "$xpath": "malaria_diagnostic_procedure_grp/test_supplies", "label": ["Testing supplies"], "select_from_list_name": "supplies"},
+        {"type": "select_one", "name": "school_type", "$xpath": "School_Identification_grp/school_type", "label": ["School type"], "select_from_list_name": "stypes"},
+        {"type": "select_multiple", "name": "nurse_working_days", "$xpath": "school_health_personnel_grp/nurse_working_days", "label": ["Working days"], "select_from_list_name": "days"},
+        {"type": "time", "name": "nurse_start_time", "$xpath": "school_health_personnel_grp/nurse_start_time", "label": ["Start"]},
+        {"type": "time", "name": "nurse_endtime_time", "$xpath": "school_health_personnel_grp/nurse_endtime_time", "label": ["End"]},
+        {"type": "text", "name": "cover_arrangement", "$xpath": "school_health_personnel_grp/cover_arrangement", "label": ["Cover"]},
+        {"type": "select_multiple", "name": "type_rdt_used", "$xpath": "malaria_diagnostic_procedure_grp/type_rdt_used", "label": ["RDT type"], "select_from_list_name": "rdts"},
+        {"type": "select_multiple", "name": "type_act_used", "$xpath": "malaria_diagnostic_procedure_grp/type_act_used", "label": ["ACT type"], "select_from_list_name": "acts"},
+        {"type": "select_one", "name": "where_supplies_stored", "$xpath": "malaria_diagnostic_procedure_grp/where_supplies_stored", "label": ["Stored"], "select_from_list_name": "stores"},
+        {"type": "text", "name": "notes_diagnostic_procedure", "$xpath": "malaria_diagnostic_procedure_grp/notes_diagnostic_procedure", "label": ["Notes"]},
         {"type": "select_one", "name": "data_officer", "$xpath": "Respondent_signature_grp/data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
     ],
     "G": [
@@ -79,7 +91,28 @@ SURVEYS = {
         {"type": "text", "name": "school_name", "$xpath": "School_Identification_grp/school_name", "label": ["Name"]},
         {"type": "text", "name": "district", "$xpath": "School_Identification_grp/district", "label": ["District"]},
         {"type": "text", "name": "region", "$xpath": "School_Identification_grp/region", "label": ["Region"]},
-        {"type": "integer", "name": "total_dormitories", "$xpath": "physical_infrastructure_grp/total_dormitories", "label": ["Dorms"]},
+        {"type": "select_one", "name": "within_breeding_site", "$xpath": "school_physical_infrastructure_grp/within_breeding_site", "label": ["Breeding sites within"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "outside_breeding_site", "$xpath": "school_physical_infrastructure_grp/outside_breeding_site", "label": ["Breeding sites outside"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "open_containers", "$xpath": "school_physical_infrastructure_grp/open_containers", "label": ["Open containers"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "functional_drainage_sys", "$xpath": "school_physical_infrastructure_grp/functional_drainage_sys", "label": ["Drainage"], "select_from_list_name": "yn"},
+        {"type": "integer", "name": "total_dormitories", "$xpath": "physical_infrastructure_grp/total_dormitories", "label": ["Number of dormitories"]},
+        {"type": "integer", "name": "total_classrooms", "$xpath": "physical_infrastructure_grp/total_classrooms", "label": ["Number of classrooms"]},
+        {"type": "integer", "name": "total_quarters", "$xpath": "physical_infrastructure_grp/total_quarters", "label": ["Teachers quarters"]},
+        {"type": "integer", "name": "total_bathrooms", "$xpath": "physical_infrastructure_grp/total_bathrooms", "label": ["Bathrooms (stances)"]},
+        {"type": "calculate", "name": "total_structures", "$xpath": "total_structures"},
+        {"type": "begin_repeat", "name": "Classrooms_dormitories_grp", "$xpath": "Classrooms_dormitories_grp", "label": ["Structures"]},
+        {"type": "select_one", "name": "structure_category", "$xpath": "Classrooms_dormitories_grp/structure_category", "label": ["Category"], "select_from_list_name": "cats"},
+        {"type": "select_one", "name": "wall_material", "$xpath": "Classrooms_dormitories_grp/wall_material", "label": ["Wall material"], "select_from_list_name": "walls"},
+        {"type": "select_one", "name": "roof_material", "$xpath": "Classrooms_dormitories_grp/roof_material", "label": ["Roof material"], "select_from_list_name": "roofs"},
+        {"type": "integer", "name": "dormitory_capacity", "$xpath": "Classrooms_dormitories_grp/dormitory_capacity", "label": ["Dormitory capacity (beds)"]},
+        {"type": "select_one", "name": "presence_open_eaves", "$xpath": "Classrooms_dormitories_grp/presence_open_eaves", "label": ["Open eaves"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "screened_windows", "$xpath": "Classrooms_dormitories_grp/screened_windows", "label": ["Screened windows"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "bednets_hung", "$xpath": "Classrooms_dormitories_grp/bednets_hung", "label": ["Bed nets hung"], "select_from_list_name": "yn"},
+        {"type": "end_repeat", "name": "Classrooms_dormitories_grp"},
+        {"type": "select_one", "name": "drainage_channel_end", "$xpath": "school_physical_infrastructure_grp/drainage_channel_end", "label": ["Drain ends"], "select_from_list_name": "drains"},
+        {"type": "select_one", "name": "history_pesticide_use", "$xpath": "malaria_prevention_features_grp/history_pesticide_use", "label": ["Pesticide history"], "select_from_list_name": "hist"},
+        {"type": "select_one", "name": "irs_history", "$xpath": "malaria_prevention_features_grp/irs_history", "label": ["IRS history"], "select_from_list_name": "hist"},
+        {"type": "text", "name": "notes_general_observations", "$xpath": "Respondent_signature_grp/notes_general_observations", "label": ["Notes"]},
         {"type": "select_one", "name": "data_officer", "$xpath": "Respondent_signature_grp/data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
     ],
     "H": [
@@ -94,7 +127,13 @@ SURVEYS = {
         {"type": "begin_repeat", "name": "Enrollment_data_grp", "$xpath": "Enrollment_data_grp", "label": ["Enrolment data"]},
         {"type": "select_one", "name": "year", "$xpath": "Enrollment_data_grp/year", "label": ["Year"], "select_from_list_name": "years"},
         {"type": "select_one", "name": "term", "$xpath": "Enrollment_data_grp/term", "label": ["Term"], "select_from_list_name": "terms"},
-        {"type": "integer", "name": "total_malaria_cases", "$xpath": "Enrollment_data_grp/total_malaria_cases", "label": ["Cases"]},
+        {"type": "integer", "name": "total_school_enroll", "$xpath": "Enrollment_data_grp/total_school_enroll", "label": ["Total school enrollment"]},
+        {"type": "integer", "name": "total_boarders", "$xpath": "Enrollment_data_grp/total_boarders", "label": ["Total boarders"]},
+        {"type": "integer", "name": "total_malaria_cases", "$xpath": "Enrollment_data_grp/total_malaria_cases", "label": ["Total malaria cases"]},
+        {"type": "integer", "name": "confirmed_malaria", "$xpath": "Enrollment_data_grp/confirmed_malaria", "label": ["Confirmed malaria cases"]},
+        {"type": "integer", "name": "total_severe_cases", "$xpath": "Enrollment_data_grp/total_severe_cases", "label": ["Severe cases"]},
+        {"type": "integer", "name": "total_rdt_used", "$xpath": "Enrollment_data_grp/total_rdt_used", "label": ["RDT used"]},
+        {"type": "integer", "name": "total_act_used", "$xpath": "Enrollment_data_grp/total_act_used", "label": ["ACT used"]},
         {"type": "end_repeat", "name": "Enrollment_data_grp"},
         {"type": "select_one", "name": "data_officer", "$xpath": "data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
     ],
@@ -142,6 +181,18 @@ CHOICES = (choices_schools()
            + [{"list_name": "officers", "name": o.lower(), "label": [o]} for o in OFFICERS]
            + [{"list_name": "years", "name": "2026", "label": ["2026"]}, {"list_name": "terms", "name": "t1", "label": ["Term 1"]}, {"list_name": "terms", "name": "t2", "label": ["Term 2"]}]
            + [{"list_name": "districts", "name": d.lower().replace(" ", "_"), "label": [d]} for d in DISTRICTS]
+           + [{"list_name": "cats", "name": c, "label": [c.title()]} for c in ("dormitory", "classroom", "quarters")]
+           + [{"list_name": "walls", "name": w, "label": [w.title()]} for w in ("brick", "mud", "concrete")]
+           + [{"list_name": "roofs", "name": r, "label": [r.title()]} for r in ("iron_sheets", "tiles", "thatch")]
+           + [{"list_name": "quals", "name": q, "label": [q.title()]} for q in ("enrolled_nurse", "registered_nurse", "nursing_assistant")]
+           + [{"list_name": "supplies", "name": s, "label": [s.upper()]} for s in ("rdt", "microscopy", "none")]
+           + [{"list_name": "stypes", "name": s, "label": [s.title()]} for s in ("government", "private", "religious")]
+           + [{"list_name": "days", "name": d[:3].lower(), "label": [d]} for d in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+           + [{"list_name": "rdts", "name": r, "label": [r.replace("_", " ").title()]} for r in ("biocredit", "bioline", "standard_q", "other")]
+           + [{"list_name": "acts", "name": a, "label": [a.title()]} for a in ("lonart", "coartem", "lumartem", "other")]
+           + [{"list_name": "stores", "name": s, "label": [s.replace("_", " ").title()]} for s in ("nurse_office", "store_room", "head_office", "other")]
+           + [{"list_name": "drains", "name": d, "label": [l]} for d, l in (("soak_pit", "On-site soak pit"), ("open_drain", "Open drain leaving the compound"), ("other", "Other"))]
+           + [{"list_name": "hist", "name": h, "label": [l]} for h, l in (("last12", "Within the last 12 months"), ("over12", "More than 12 months ago"), ("never", "Never"))]
            + [{"list_name": "regions", "name": r.lower(), "label": [r]} for r in set(DISTRICTS.values())])
 
 
@@ -161,7 +212,15 @@ def build():
             rec.update({"School_Identification_grp/school_code": s["code"], "School_Identification_grp/school_name": "OKELLO JAMES" if i in (5, 9) else s["name"],
                         "School_Identification_grp/district": s["district"] if random.random() > 0.25 else "",   # blanks
                         "School_Identification_grp/region": s["region"], "School_Identification_grp/enrollment_date": t.date().isoformat(),
-                        "school_health_personnel_grp/nurse_name": "Nurse X", "school_health_personnel_grp/nurse_contact": f"07{random.randint(10000000, 99999999)}"})
+                        "school_health_personnel_grp/nurse_name": "Nurse X", "school_health_personnel_grp/nurse_contact": f"07{random.randint(10000000, 99999999)}",
+                        "school_health_personnel_grp/nurse_qualification": random.choice(["enrolled_nurse", "registered_nurse", "nursing_assistant"]), "school_health_personnel_grp/dedicated_sickbay": random.choice(["yes", "no"]),
+                        "malaria_diagnostic_procedure_grp/test_supplies": random.choice(["rdt", "rdt microscopy", "none"]), "School_Identification_grp/school_type": random.choice(["government", "private", "religious"]),
+                        "school_health_personnel_grp/nurse_working_days": random.choice(["mon tue wed thu fri", "mon tue wed thu fri sat sun", "mon wed fri"]),
+                        "school_health_personnel_grp/nurse_start_time": random.choice(["08:00:00.000+03:00", "07:00:00.000+03:00", "06:00:00.000+03:00"]), "school_health_personnel_grp/nurse_endtime_time": random.choice(["17:00:00.000+03:00", "22:00:00.000+03:00", "06:00:00.000+03:00"]),
+                        "school_health_personnel_grp/cover_arrangement": random.choice(["Nurse stays on site, on duty 24 hours", "Refers to health centre after hours; matron on duty", "Part-time nurse comes Mon-Fri"]),
+                        "malaria_diagnostic_procedure_grp/type_rdt_used": random.choice(["biocredit", "bioline standard_q", "other"]), "malaria_diagnostic_procedure_grp/type_act_used": random.choice(["lonart", "coartem lumartem", "other"]),
+                        "malaria_diagnostic_procedure_grp/where_supplies_stored": random.choice(["nurse_office", "nurse_office", "store_room", "head_office"]),
+                        "malaria_diagnostic_procedure_grp/notes_diagnostic_procedure": random.choice(["RDT for all suspected cases; severe cases referred to hospital", "Clinical diagnosis when RDTs out of stock", "No register kept; data missing for term 1", ""])})
         data["F"].append(rec)
     # G: 74 schools, 10 with a second submission
     for i, s in enumerate(recruited + random.sample(recruited, 10)):
@@ -170,7 +229,16 @@ def build():
                           "start": t.astimezone(EAT).isoformat(timespec="milliseconds"), "end": (t + timedelta(hours=6)).astimezone(EAT).isoformat(timespec="milliseconds"),
                           "School_Identification_grp/school_code": "SCH089" if i == 3 else s["code"], "School_Identification_grp/school_name": s["name"],
                           "School_Identification_grp/district": s["district"], "School_Identification_grp/region": s["region"],
-                          "physical_infrastructure_grp/total_dormitories": random.randint(2, 12),
+                          "physical_infrastructure_grp/total_dormitories": random.randint(2, 12), "physical_infrastructure_grp/total_classrooms": random.randint(6, 30),
+                          "physical_infrastructure_grp/total_quarters": random.randint(0, 20), "physical_infrastructure_grp/total_bathrooms": random.randint(4, 48),
+                          "school_physical_infrastructure_grp/within_breeding_site": random.choice(["yes", "no"]), "school_physical_infrastructure_grp/outside_breeding_site": random.choice(["yes", "no"]),
+                          "school_physical_infrastructure_grp/open_containers": random.choice(["yes", "no"]), "school_physical_infrastructure_grp/functional_drainage_sys": random.choice(["yes", "no"]),
+                          "malaria_prevention_features_grp/irs_history": random.choice(["last12", "over12", "never", "never"]), "malaria_prevention_features_grp/history_pesticide_use": random.choice(["last12", "last12", "over12", "never"]),
+                          "school_physical_infrastructure_grp/drainage_channel_end": random.choice(["soak_pit", "soak_pit", "open_drain", "other"]), "Respondent_signature_grp/notes_general_observations": "Head teacher Mr Okello was present",
+                          "Classrooms_dormitories_grp": [{"Classrooms_dormitories_grp/structure_category": random.choice(["dormitory", "dormitory", "classroom", "quarters"]),
+                                                          "Classrooms_dormitories_grp/wall_material": random.choice(["brick", "mud", "concrete"]), "Classrooms_dormitories_grp/roof_material": random.choice(["iron_sheets", "tiles", "thatch"]),
+                                                          "Classrooms_dormitories_grp/dormitory_capacity": random.randint(20, 120), "Classrooms_dormitories_grp/presence_open_eaves": random.choice(["yes", "no"]),
+                                                          "Classrooms_dormitories_grp/screened_windows": random.choice(["yes", "no"]), "Classrooms_dormitories_grp/bednets_hung": random.choice(["yes", "no"])} for _ in range(random.randint(1, 4))],
                           "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
     # H: 74 recruited (3 with region typed as district)
     for i, s in enumerate(recruited):
@@ -182,7 +250,10 @@ def build():
                           "School_location_info_grp/region": s["region"], "School_location_info_grp/head_master": "HT Y",
                           "School_location_info_grp/hm_contact": f"07{random.randint(10000000, 99999999)}",
                           "School_location_info_grp/completion_date": t.date().isoformat(),
-                          "Enrollment_data_grp": [{"Enrollment_data_grp/year": "2026", "Enrollment_data_grp/term": tm, "Enrollment_data_grp/total_malaria_cases": random.randint(0, 80)} for tm in (["t1", "t2"] if i % 3 else ["t1"])],
+                          "Enrollment_data_grp": [{"Enrollment_data_grp/year": "2026", "Enrollment_data_grp/term": tm, "Enrollment_data_grp/total_school_enroll": (e := random.randint(300, 1500)),
+                                                   "Enrollment_data_grp/total_boarders": int(e * random.uniform(0.4, 0.95)), "Enrollment_data_grp/total_malaria_cases": (c := random.randint(0, 120)),
+                                                   "Enrollment_data_grp/confirmed_malaria": int(c * random.uniform(0.5, 1)), "Enrollment_data_grp/total_severe_cases": random.randint(0, 5),
+                                                   "Enrollment_data_grp/total_rdt_used": c + random.randint(0, 60), "Enrollment_data_grp/total_act_used": c} for tm in (["t1", "t2"] if i % 3 else ["t1"])],
                           "data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
     # A: 48 assessments — 44 of recruited schools (name variants), 2 of unrecruited, 2 with blank district
     pool = random.sample(recruited, 44) + SCHOOLS[80:82]

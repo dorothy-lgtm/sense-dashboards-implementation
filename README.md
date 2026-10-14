@@ -24,7 +24,8 @@ GitHub Pages  ←  site/index.html + site/data/summary.json
 | `config/forms.yml` | The forms to pull (Kobo asset UIDs), group-by fields, dedupe keys, targets, DQ thresholds |
 | `scripts/kobo_pull.py` | Pulls form definitions + all submissions (paginated), downloads Kobo's saved export, writes flattened CSVs |
 | `scripts/summarize.py` | Aggregates → `site/data/summary.json`. No row-level values, names or phone numbers |
-| `site/index.html` | The dashboard. Plain HTML/JS, no build step, reads `data/summary.json` |
+| `site/index.html` + `site/js/*.js` | The dashboard: one JS module per page (recruitment, retrospective, infrastructure, mosquito prevention, structures, nurse & testing, practices, form monitoring). Plain HTML/JS, no build step |
+| `scripts/metrics.py` / `config/derived.yml` | Per-school metrics for the analytic pages: every numeric/choice/date answer from Annex F, G, H (repeat groups included), plus keyword flags derived from the nurse notes. Free-text fields are read for the flags but never exported |
 | `.github/workflows/refresh.yml` | 2-hourly refresh + Pages deploy |
 | `.github/workflows/daily-digest.yml` | Daily export email (see below) |
 | `scripts/send_digest.py` / `config/digest.yml` / `state/digest.json` | The email, its settings, and its pause state |

@@ -1,0 +1,28 @@
+# Derived per-school indicators computed by scripts/metrics.py from Annex F free-text fields.
+# Only the resulting yes/no flags are published; the text itself never leaves the pipeline.
+# Keyword matching is case-insensitive; a flag is true if ANY keyword appears in ANY of the
+# listed fields. These are therefore minimum counts (a practice not mentioned is not counted).
+
+text_fields: [cover_arrangement, notes_diagnostic_procedure, notes_general_observations]
+
+practices:
+  refers_severe:      { label: "Refer severe or unresolved cases", keywords: [refer, referral, referred, health centre, health center, hospital] }
+  mentions_rdt:       { label: "Mention RDT testing",               keywords: [rdt, rapid test, rapid diagnostic] }
+  mentions_clinical:  { label: "Mention clinical diagnosis",        keywords: [clinical, presumptive, symptoms, signs] }
+  mentions_microscopy: { label: "Mention microscopy or blood smear", keywords: [microscop, blood smear, slide, lab] }
+  rdt_stockout:       { label: "Report RDT stockouts",              keywords: [stock out, stockout, stock-out, out of stock, no rdt, ran out, shortage] }
+
+cover:
+  nurse_on_site:      { label: "Nurse stays on site or always available", keywords: [stays, resides, lives at, on site, onsite, always available, available at all times, within the school] }
+  on_duty_24h:        { label: "On duty 24 hours",                 keywords: ["24", twenty four, twenty-four, day and night, round the clock] }
+  backup_nurse:       { label: "Backup or part-time nurse",        keywords: [backup, back-up, part time, part-time, second nurse, another nurse, assistant, relief] }
+  data_gaps:          { label: "Data gaps noted by visit team",    keywords: [no record, no register, not recorded, missing, incomplete, gap, not available, unavailable, no data] }
+
+# Nurse qualification: resolve "Other (specify)" text into a category by keyword
+qualification_other_map:
+  "Registered nurse": [registered, rn]
+  "Enrolled nurse": [enrolled, en]
+  "Midwife": [midwife, midwifery]
+  "Clinical officer": [clinical officer, co]
+  "Nursing assistant": [assistant, aide]
+qualified_categories: [registered, enrolled, clinical officer]   # substrings of the qualification label

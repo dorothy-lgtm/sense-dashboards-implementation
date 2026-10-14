@@ -44,6 +44,7 @@ jobs:
         run: |
           python scripts/summarize.py
           python scripts/roster.py
+          python scripts/metrics.py
 
       - name: Send digest
         env:
