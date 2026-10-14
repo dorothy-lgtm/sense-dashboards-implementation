@@ -31,6 +31,16 @@ assessment_items:
   ento_data_collected: Ento data
   retros_data_collected: Retro data
 
+# School codes are structured SCHrrdd nnn (rr = region, dd = district): the first 7
+# characters identify the district, which is more reliable than the free-text district field.
+code_district_prefix_len: 7
+
+# Words that mark a text as a school name. A school_name value with none of these (e.g. a
+# head teacher's name typed in the wrong field) is flagged and kept off the published roster.
+school_tokens: [SCHOOL, SCHOOLS, SS, SSS, S.S, SEC, SECONDARY, COLLEGE, HIGH, ACADEMY, INSTITUTE,
+                SEMINARY, VOCATIONAL, TECHNICAL, COMPREHENSIVE, FOUNDATION, MEMORIAL, GIRLS, BOYS,
+                H/S, SCH, CENTRE, CENTER, STANDARD, MODERN, PROGRESSIVE, COMMUNITY, PARENTS, JUNIOR, SENIOR]
+
 # District name clean-up. Keys are matched after upper-casing and trimming.
 # Values that are regions (not districts) are moved to the region column.
 district_aliases:

@@ -90,9 +90,11 @@ SURVEYS = {
         {"type": "text", "name": "head_master", "$xpath": "School_location_info_grp/head_master", "label": ["Head teacher"]},
         {"type": "text", "name": "hm_contact", "$xpath": "School_location_info_grp/hm_contact", "label": ["HT contact"]},
         {"type": "date", "name": "completion_date", "$xpath": "School_location_info_grp/completion_date", "label": ["Completion date"]},
+        {"type": "begin_repeat", "name": "Enrollment_data_grp", "$xpath": "Enrollment_data_grp", "label": ["Enrolment data"]},
         {"type": "select_one", "name": "year", "$xpath": "Enrollment_data_grp/year", "label": ["Year"], "select_from_list_name": "years"},
         {"type": "select_one", "name": "term", "$xpath": "Enrollment_data_grp/term", "label": ["Term"], "select_from_list_name": "terms"},
         {"type": "integer", "name": "total_malaria_cases", "$xpath": "Enrollment_data_grp/total_malaria_cases", "label": ["Cases"]},
+        {"type": "end_repeat", "name": "Enrollment_data_grp"},
         {"type": "select_one", "name": "data_officer", "$xpath": "data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
     ],
     "A": [
@@ -129,7 +131,7 @@ def build():
                "School_screening_grp/overall_status": "ELIGIBLE" if s else "NOT ELIGIBLE",
                "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [1.7, 32.3] if s and random.random() > 0.2 else [None, None]}
         if s:
-            rec.update({"School_Identification_grp/school_code": s["code"], "School_Identification_grp/school_name": s["name"],
+            rec.update({"School_Identification_grp/school_code": s["code"], "School_Identification_grp/school_name": "OKELLO JAMES" if i in (5, 9) else s["name"],
                         "School_Identification_grp/district": s["district"] if random.random() > 0.25 else "",   # blanks
                         "School_Identification_grp/region": s["region"], "School_Identification_grp/enrollment_date": t.date().isoformat(),
                         "school_health_personnel_grp/nurse_name": "Nurse X", "school_health_personnel_grp/nurse_contact": f"07{random.randint(10000000, 99999999)}"})
@@ -139,7 +141,7 @@ def build():
         t = when(i); sid += 1
         data["G"].append({"_id": sid, "_uuid": f"g-{sid}", "_submission_time": ts(t + timedelta(hours=5)), "_submitted_by": "pa_sense",
                           "start": t.astimezone(EAT).isoformat(timespec="milliseconds"), "end": (t + timedelta(hours=6)).astimezone(EAT).isoformat(timespec="milliseconds"),
-                          "School_Identification_grp/school_code": s["code"], "School_Identification_grp/school_name": s["name"],
+                          "School_Identification_grp/school_code": "SCH089" if i == 3 else s["code"], "School_Identification_grp/school_name": s["name"],
                           "School_Identification_grp/district": s["district"], "School_Identification_grp/region": s["region"],
                           "physical_infrastructure_grp/total_dormitories": random.randint(2, 12),
                           "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
@@ -153,7 +155,7 @@ def build():
                           "School_location_info_grp/region": s["region"], "School_location_info_grp/head_master": "HT Y",
                           "School_location_info_grp/hm_contact": f"07{random.randint(10000000, 99999999)}",
                           "School_location_info_grp/completion_date": t.date().isoformat(),
-                          "Enrollment_data_grp/year": "2026", "Enrollment_data_grp/term": "t1", "Enrollment_data_grp/total_malaria_cases": random.randint(0, 80),
+                          "Enrollment_data_grp": [{"Enrollment_data_grp/year": "2026", "Enrollment_data_grp/term": tm, "Enrollment_data_grp/total_malaria_cases": random.randint(0, 80)} for tm in (["t1", "t2"] if i % 3 else ["t1"])],
                           "data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
     # A: 48 assessments — 44 of recruited schools (name variants), 2 of unrecruited, 2 with blank district
     pool = random.sample(recruited, 44) + SCHOOLS[80:82]

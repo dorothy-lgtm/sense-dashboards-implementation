@@ -75,6 +75,7 @@
   .empty { color: var(--muted); font-style: italic; }
   code { font-size: 12px; background: var(--grid); padding: 1px 4px; border-radius: 3px; }
   .legend { color: var(--ink-2); font-size: 12px; margin: 6px 0; }
+  ul { margin: 4px 0 4px 18px; padding: 0; }
   .overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 8px; }
   .overview .card { cursor: pointer; }
   .overview .card:hover, .overview .card[aria-current="true"] { outline: 2px solid var(--series-1); outline-offset: -1px; }
@@ -218,14 +219,14 @@ function renderSchools() {
     : `All schools — ${rec.length} recruited <span class="meta">(${all.length} on roster)</span>`;
   const clear = $("#clear"); if (clear) clear.onclick = e => { e.preventDefault(); selectDistrict(null); };
   const rows = all.map(s => [
-    `<b>${esc(s.name)}</b><br><span class="meta">${esc(s.code)}${s.name_variants.length ? ` · also entered as: ${esc(s.name_variants.join("; "))}` : ""}</span>`,
+    `<b>${esc(s.name)}</b>${s.suspect_name_forms.length ? ` <span class="chip no" title="A person's name appears in the school-name field">name field wrong in ${esc(s.suspect_name_forms.join("/"))}</span>` : ""}<br><span class="meta">${esc(s.code)}${s.name_variants.length ? ` · also entered as: ${esc(s.name_variants.join("; "))}` : ""}</span>`,
     district ? "" : esc(s.district || "?") + (s.district_conflict ? ` <span class="chip no">district differs across forms</span>` : ""),
     statusCell(s),
     s.eligibility ? esc(titleCase(s.eligibility)) : "<span class='meta'>—</span>",
-    s.recruited ? fmtD(s.recruited_date) : "<span class='meta'>not yet</span>",
+    s.recruited ? `${fmtD(s.recruited_date)}${s.retro_terms.length ? `<br><span class="meta">${esc(s.retro_terms.join(", "))}</span>` : `<br><span class="chip no">no term recorded</span>`}` : "<span class='meta'>not yet</span>",
     s.assessed ? `${fmtD(s.assessed_date)}<br>${checklist(s.assessment)}` : (s.recruited ? `<span class="flag"><span class="dot" style="background:${s.lag_days > 14 ? "var(--serious)" : "var(--warning)"}"></span>waiting ${s.lag_days} d</span>` : "<span class='meta'>—</span>"),
   ]);
-  const headers = [{t:"School"},{t:"District"},{t:"Forms"},{t:"Screening"},{t:"Recruited (Annex H)"},{t:"Assessment"}];
+  const headers = [{t:"School"},{t:"District"},{t:"Forms"},{t:"Screening"},{t:"Recruited (Annex H) · terms entered"},{t:"Assessment"}];
   if (district) headers.splice(1, 1), rows.forEach(r => r.splice(1, 1));
   $("#schools").innerHTML = table(headers, rows, "No schools on the roster for this selection");
 }
@@ -235,18 +236,25 @@ function renderIssues() {
   const noD = ROSTER.schools_without_district;
   const conflicts = ROSTER.schools.filter(s => s.district_conflict);
   const dupeNames = ROSTER.schools.filter(s => s.name_variants.length);
+  const sus = ROSTER.suspect_school_names || [], dupC = ROSTER.duplicate_codes || [];
+  const anr = ROSTER.assessed_not_recruited || [], rns = ROSTER.recruited_not_screened || [];
+  const li = arr => arr.map(x => `<li>${x}</li>`).join("");
   $("#issues").innerHTML = `
     <div class="card"><h3>Assessment forms not matched to a recruited school (${un.length + am.length})</h3>
       <p class="meta">The assessment form has no school code, so it is matched by school name + district. Fix the name in Kobo, or add the school-code question to the form.</p>
       ${table([{t:"Kobo _id"},{t:"School name as typed"},{t:"District"},{t:"Problem"}],
         un.map(u => [u.id, esc(u.name || "(blank)"), esc(u.district || "—"), esc(u.reason)])
           .concat(am.map(a => [a.id, esc(a.name), esc(a.district || "—"), "ambiguous — could be: " + esc(a.candidates.join(" | "))])), "All assessment forms matched")}</div>
-    <div class="card"><h3>Roster inconsistencies</h3>
-      ${noD.length ? `<p><b>${noD.length}</b> recruited school(s) with no district in any form: ${esc(noD.join(", "))}</p>` : ""}
-      ${conflicts.length ? `<p><b>${conflicts.length}</b> school(s) with different districts across forms: ${conflicts.map(s => esc(`${s.code} ${s.name}`)).join("; ")}</p>` : ""}
-      ${dupeNames.length ? `<p><b>${dupeNames.length}</b> school code(s) entered with more than one spelling of the name: ${dupeNames.map(s => esc(s.code)).join(", ")}</p>` : ""}
+    <div class="card"><h3>Roster inconsistencies (${sus.length + dupC.length + anr.length + rns.length + conflicts.length + noD.length})</h3>
+      ${dupC.length ? `<p><b>Same school under two codes</b> — one form used a different code; the school is split in two:<ul>${li(dupC.map(d => `${esc(d.codes.join(" + "))} — ${esc(d.name)} (${esc(d.district || "?")})`))}</ul></p>` : ""}
+      ${sus.length ? `<p><b>A person's name in the school-name field</b> (text withheld here; open the record in Kobo):<ul>${li(sus.map(x => `${esc(x.code)} in Annex ${esc(x.forms.join("/"))} (${esc(x.district || "?")})${x.name_known ? "" : " — no valid school name in any form"}`))}</ul></p>` : ""}
+      ${anr.length ? `<p><b>Assessment entered but no Annex H</b> (not counted as recruited):<ul>${li(anr.map(x => `${esc(x.code)} ${esc(x.name)} (${esc(x.district || "?")}), assessed ${fmtD(x.assessed_date)}`))}</ul></p>` : ""}
+      ${rns.length ? `<p><b>Annex H entered but no Annex F screening form</b>:<ul>${li(rns.map(x => `${esc(x.code)} ${esc(x.name)} (${esc(x.district || "?")})`))}</ul></p>` : ""}
+      ${conflicts.length ? `<p><b>District typed differently from the code's district</b>: ${conflicts.map(s => esc(`${s.code} (typed ${s.district_typed || "blank"}, code says ${s.district})`)).join("; ")}</p>` : ""}
+      ${noD.length ? `<p><b>${noD.length}</b> school(s) with no district: ${esc(noD.join(", "))}</p>` : ""}
+      ${dupeNames.length ? `<p class="meta">${dupeNames.length} school code(s) entered with more than one spelling of the name (harmless; shown under each school).</p>` : ""}
       ${ROSTER.notes.map(n => `<p class="meta">${esc(n)}</p>`).join("")}
-      ${!noD.length && !conflicts.length && !dupeNames.length ? `<p class="empty">None</p>` : ""}
+      ${!sus.length && !dupC.length && !anr.length && !rns.length && !conflicts.length && !noD.length ? `<p class="empty">None</p>` : ""}
     </div>`;
 }
 

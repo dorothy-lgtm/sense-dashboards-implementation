@@ -88,6 +88,27 @@ def norm_district(v) -> tuple[str | None, str | None]:
 
 
 STRIP = [t.upper() for t in CFG["name_match"].get("strip_tokens", [])]
+SCHOOL_TOKENS = {t.upper() for t in CFG.get("school_tokens", [])}
+
+
+def looks_like_school(name) -> bool:
+    """True if the text contains a school-type word. Guards against head-teacher names typed
+    into the school-name field (which must not be published)."""
+    toks = set(norm_name(name).split())
+    return bool(toks & SCHOOL_TOKENS) or bool(re.search(r"\bH/S\b|\bS\.S\b|\bS\.S\.S\b", str(name).upper()))
+
+
+def repeat_values(sub: dict, q: dict | None) -> list:
+    """Values of a question that lives inside a repeat group (one per child record)."""
+    if not q or not q.get("repeat"):
+        return []
+    out = []
+    for child in sub.get(q["repeat"]) or []:
+        if isinstance(child, dict):
+            v = child.get(q["xpath"])
+            if v not in (None, ""):
+                out.append(v)
+    return out
 
 
 def norm_name(v) -> str:
@@ -122,8 +143,11 @@ def main() -> int:
     def school(code: str) -> dict:
         return schools.setdefault(code, {
             "code": code, "names": Counter(), "districts": Counter(), "regions": Counter(),
-            "F": [], "G": [], "H": [], "A": [],
+            "F": [], "G": [], "H": [], "A": [], "suspect_names": [],
         })
+
+    prefix_len = int(CFG.get("code_district_prefix_len", 7))
+    prefix_districts: dict[str, Counter] = defaultdict(Counter)
 
     # --- F, G, H keyed on school_code ------------------------------------------------
     for tag, subs, q, ch in (("F", F_subs, F_q, F_ch), ("G", G_subs, G_q, G_ch), ("H", H_subs, H_q, H_ch)):
@@ -139,10 +163,14 @@ def main() -> int:
             sc = school(str(code))
             n = val(s, nq)
             if n:
-                sc["names"][str(n).strip()] += 1
+                if looks_like_school(n):
+                    sc["names"][str(n).strip()] += 1
+                else:
+                    sc["suspect_names"].append(tag)      # text kept out of the published roster
             d, r_from_d = norm_district(val(s, dq))
             if d:
                 sc["districts"][d] += 1
+                prefix_districts[str(code)[:prefix_len]][d] += 1
             r = val(s, rq) or r_from_d
             if r:
                 sc["regions"][str(r).strip().upper()] += 1
@@ -154,8 +182,12 @@ def main() -> int:
                 eq = field(q, CFG.get("eligibility_field", "overall_status"))
                 rec["eligibility"] = label(eq, val(s, eq), ch)
             if tag == "H":
-                rec["year"] = label(field(q, "year"), val(s, field(q, "year")), ch)
-                rec["term"] = label(field(q, "term"), val(s, field(q, "term")), ch)
+                yq, tq = field(q, "year"), field(q, "term")
+                years = repeat_values(s, yq) or ([val(s, yq)] if val(s, yq) else [])
+                terms = repeat_values(s, tq) or ([val(s, tq)] if val(s, tq) else [])
+                rec["terms"] = [f"{label(yq, y, ch)} {label(tq, t, ch)}".strip() for y, t in zip(years, terms)] if years and terms \
+                    else [str(label(yq, y, ch)) for y in years] or [str(label(tq, t, ch)) for t in terms]
+                rec["term_records"] = max(len(years), len(terms), 1 if (years or terms) else 0)
             sc[tag].append(rec)
         if no_code:
             notes.append(f"{tag}: {no_code} submission(s) have no school code (screened-out or incomplete) and are not on the roster")
@@ -166,12 +198,24 @@ def main() -> int:
 
     # --- resolve one name / district / region per school ------------------------------
     for sc in schools.values():
-        sc["name"] = sc["names"].most_common(1)[0][0] if sc["names"] else code_labels.get(sc["code"], sc["code"])
+        sc["name"] = sc["names"].most_common(1)[0][0] if sc["names"] else None
         sc["name_variants"] = [n for n, _ in sc["names"].most_common()][1:]
-        sc["district"] = sc["districts"].most_common(1)[0][0] if sc["districts"] else None
+        typed = sc["districts"].most_common(1)[0][0] if sc["districts"] else None
+        pref = prefix_districts.get(sc["code"][:prefix_len])
+        by_code = pref.most_common(1)[0][0] if pref else None
+        sc["district"] = by_code or typed
+        sc["district_typed"] = typed
+        sc["district_conflict"] = bool(typed and by_code and typed != by_code) or len(sc["districts"]) > 1
         sc["region"] = sc["regions"].most_common(1)[0][0] if sc["regions"] else None
-        sc["district_conflict"] = len(sc["districts"]) > 1
         del sc["names"], sc["districts"], sc["regions"]
+    # same (cleaned) school name under more than one code → probable duplicate code
+    name_codes: dict[str, list[str]] = defaultdict(list)
+    for sc in schools.values():
+        for n in ([sc["name"]] if sc["name"] else []) + sc["name_variants"]:
+            key = (sc["district"] or "") + "|" + core_name(n)
+            if sc["code"] not in name_codes[key]:
+                name_codes[key].append(sc["code"])
+    duplicate_codes = sorted({tuple(sorted(v)) for v in name_codes.values() if len(v) > 1})
 
     # --- assessment: match by name (+district) -------------------------------------
     nq, dq, rq = field(A_q, name_f), field(A_q, dist_f), field(A_q, reg_f)
@@ -180,7 +224,7 @@ def main() -> int:
     by_core: dict[str, list[dict]] = defaultdict(list)
     by_norm: dict[str, list[dict]] = defaultdict(list)
     for sc in schools.values():
-        for n in [sc["name"]] + sc["name_variants"]:
+        for n in ([sc["name"]] if sc["name"] else []) + sc["name_variants"]:
             by_norm[norm_name(n)].append(sc)
             by_core[core_name(n)].append(sc)
     min_sim = float(CFG["name_match"].get("min_similarity", 0.86))
@@ -208,7 +252,7 @@ def main() -> int:
             pool = [c for c in schools.values() if not a_dist or c["district"] == a_dist or c["district"] is None]
             scored = []
             for c in pool:
-                for n in [c["name"]] + c["name_variants"]:
+                for n in ([c["name"]] if c["name"] else []) + c["name_variants"]:
                     r = difflib.SequenceMatcher(None, core_name(a_name), core_name(n)).ratio()
                     if r >= min_sim:
                         scored.append((r, c))
@@ -217,7 +261,7 @@ def main() -> int:
                 best = scored[0][1]
                 if len(scored) > 1 and scored[1][1] is not best and scored[1][0] >= scored[0][0] - 0.02:
                     ambiguous.append({"id": rec["id"], "name": a_name, "district": a_dist,
-                                      "candidates": [f"{c['code']} {c['name']}" for _, c in scored[:3]]})
+                                      "candidates": [f"{c['code']} {c['name'] or ''}".strip() for _, c in scored[:3]]})
                     continue
                 cands, method = [best], f"fuzzy {scored[0][0]:.2f}"
         uniq = {c["code"]: c for c in cands}
@@ -228,7 +272,7 @@ def main() -> int:
             match_methods[method.split()[0]] += 1
         elif len(uniq) > 1:
             ambiguous.append({"id": rec["id"], "name": a_name, "district": a_dist,
-                              "candidates": [f"{c['code']} {c['name']}" for c in uniq.values()][:5]})
+                              "candidates": [f"{c['code']} {c['name'] or ''}".strip() for c in uniq.values()][:5]})
         else:
             unmatched.append({"id": rec["id"], "name": a_name, "district": a_dist, "reason": "no similar school on roster"})
 
@@ -245,13 +289,16 @@ def main() -> int:
             h0 = date.fromisoformat(h_dates[0])
             lag = ((date.fromisoformat(a_dates[-1]) if assessed and a_dates else today) - h0).days
         latest_a = sc["A"][-1]["items"] if sc["A"] else {}
+        all_terms = sorted({t for r in sc["H"] for t in r.get("terms", []) if t and t != "None"})
         rows.append({
-            "code": sc["code"], "name": sc["name"], "name_variants": sc["name_variants"],
-            "district": sc["district"], "region": sc["region"], "district_conflict": sc["district_conflict"],
+            "code": sc["code"], "name": sc["name"] or f"(no school name — code {sc['code']})", "name_variants": sc["name_variants"],
+            "name_missing": sc["name"] is None, "suspect_name_forms": sorted(set(sc["suspect_names"])),
+            "district": sc["district"], "district_typed": sc["district_typed"], "region": sc["region"], "district_conflict": sc["district_conflict"],
             "screened": bool(sc["F"]), "eligibility": f_elig[-1] if f_elig else None,
             "structure_form": bool(sc["G"]), "structure_records": len(sc["G"]),
             "recruited": recruited, "recruited_date": h_dates[0] if h_dates else None,
-            "retro_records": len(sc["H"]), "retro_terms": sorted({f"{r.get('year')} {r.get('term')}" for r in sc["H"]}),
+            "retro_records": len(sc["H"]), "retro_terms": all_terms,
+            "retro_term_records": sum(r.get("term_records", 0) for r in sc["H"]),
             "assessed": assessed, "assessed_date": a_dates[-1] if a_dates else None,
             "assessment": latest_a, "assessment_match": sc["A"][-1].get("match") if sc["A"] else None,
             "lag_days": lag,
@@ -289,6 +336,13 @@ def main() -> int:
             "last_recruited": max((r["recruited_date"] for r in rec if r["recruited_date"]), default=None),
         })
     no_district = [r for r in rows if not r["district"]]
+    assessed_not_recruited = [{"code": r["code"], "name": r["name"], "district": r["district"], "assessed_date": r["assessed_date"]}
+                              for r in rows if r["assessed"] and not r["recruited"]]
+    recruited_not_screened = [{"code": r["code"], "name": r["name"], "district": r["district"]} for r in rows if r["recruited"] and not r["screened"]]
+    suspect_names = [{"code": r["code"], "district": r["district"], "forms": r["suspect_name_forms"], "name_known": not r["name_missing"]}
+                     for r in rows if r["suspect_name_forms"]]
+    dup_code_rows = [{"codes": list(codes), "name": next((r["name"] for r in rows if r["code"] == codes[0]), ""),
+                      "district": next((r["district"] for r in rows if r["code"] == codes[0]), None)} for codes in duplicate_codes]
 
     rec_rows = [r for r in rows if r["recruited"]]
     asd_rows = [r for r in rec_rows if r["assessed"]]
@@ -313,6 +367,8 @@ def main() -> int:
         "median_open_lag_days": sorted(open_lags)[len(open_lags) // 2] if open_lags else None,
         "max_open_lag_days": max(open_lags) if open_lags else None,
         "recruited_last_7d": sum(1 for r in rec_rows if r["recruited_date"] and (today - date.fromisoformat(r["recruited_date"])).days < 7),
+        "issues": len(unmatched) + len(ambiguous) + len(assessed_not_recruited) + len(recruited_not_screened) + len(suspect_names) + len(dup_code_rows)
+                  + sum(1 for r in rows if r["district_conflict"]) + len(no_district),
     }
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -324,6 +380,10 @@ def main() -> int:
         "schools_without_district": [r["code"] for r in no_district],
         "assessment_unmatched": unmatched,
         "assessment_ambiguous": ambiguous,
+        "assessed_not_recruited": assessed_not_recruited,
+        "recruited_not_screened": recruited_not_screened,
+        "suspect_school_names": suspect_names,
+        "duplicate_codes": dup_code_rows,
         "notes": notes,
     }, ensure_ascii=False, indent=1))
     log(f"roster: {len(rows)} schools, {totals['schools_recruited']} recruited, {totals['schools_assessed']} assessed "
