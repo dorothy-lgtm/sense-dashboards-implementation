@@ -52,12 +52,12 @@
     drawDistrict();
     wireToggles("prev-ind", k => { ind = k; drawDistrict(); });
 
-    const yn = v => v === undefined || v === null ? "—" : yes(v) ? statusChip("Yes", "warning") : esc(v);
+    const yn = v => v === undefined || v === null ? "—" : yes(v) ? statusChip("Yes", "warning") : esc(shortLabel(v));
     sortableTable($("#prev-table"), [
       { key: "school", label: "School" }, { key: "district", label: "District" },
       { key: "inside", label: "Breeding inside", render: yn }, { key: "outside", label: "Breeding outside", render: yn },
-      { key: "containers", label: "Open containers", render: yn }, { key: "drainage", label: "Working drainage", render: v => v === undefined ? "—" : yes(v) ? statusChip("Yes", "good") : esc(v) },
-      { key: "drain_end", label: "Drain ends" }, { key: "pesticide", label: "Pesticide history" }, { key: "irs", label: "IRS history" },
+      { key: "containers", label: "Open containers", render: yn }, { key: "drainage", label: "Working drainage", render: v => v === undefined ? "—" : yes(v) ? statusChip("Yes", "good") : esc(shortLabel(v)) },
+      { key: "drain_end", label: "Drain ends", render: v => esc(shortLabel(v)) }, { key: "pesticide", label: "Pesticide history", render: v => esc(shortLabel(v)) }, { key: "irs", label: "IRS history", render: v => esc(shortLabel(v)) },
     ], schools.map(s => { const a = s.G.answers; return { school: s.name, district: s.district, inside: a.within_breeding_site, outside: a.outside_breeding_site, containers: a.open_containers, drainage: a.functional_drainage_sys, drain_end: a.drainage_channel_end ?? null, pesticide: a.history_pesticide_use ?? null, irs: a.irs_history ?? null }; }), { sortKey: "school" });
   }
   PAGES.prevention = { title: "Mosquito prevention", render, filters: true };

@@ -71,15 +71,29 @@ function groupedBars(categories, series, { height = 220, fmt = num } = {}) {
   return `<div class="legend">${series.map((s, i) => `<span class="dot" style="background:${SERIES[i]}"></span> ${esc(s.name)} &nbsp;`).join("")}</div>${svg}`;
 }
 
-/** Distribution of a categorical answer across records → [{label, value}] sorted desc. */
+/** Kobo choice labels are often long upper-case sentences: "NONE, OR VERY FEW — ALMOST NO ... (0-10%)".
+ *  Keep the part before the dash plus any "(…%)" range, in sentence case. */
+function shortLabel(v) {
+  if (v === null || v === undefined) return "—";
+  let s = String(v).trim();
+  const range = (s.match(/\((\d[^()]*%[^()]*)\)/) || [])[1];
+  s = s.split(/\s[—–-]\s|—/)[0].trim();
+  if (s.length > 60) s = s.slice(0, 57) + "…";
+  const isUpper = s === s.toUpperCase() && /[A-Z]/.test(s);
+  if (isUpper) s = s.charAt(0) + s.slice(1).toLowerCase();
+  s = s.replace(/\b(rdt|act|irs|pf|pv|hrp2|pldh|mou|id)\b/gi, m => m.toUpperCase()).replace(/\bp\.f\b/gi, "P.f").replace(/\bpan\b/gi, "Pan");
+  return range && !s.includes("%") ? `${s} (${range})` : s;
+}
+/** Distribution of a categorical answer across records → [{label, value}] sorted desc.
+ *  Values are grouped case-insensitively and shown with shortLabel(). */
 function distribution(records, key) {
   const c = new Map();
   records.forEach(r => {
     const v = r?.[key];
     if (v === undefined || v === null || v === "") return;
-    (Array.isArray(v) ? v : [v]).forEach(x => c.set(String(x), (c.get(String(x)) || 0) + 1));
+    (Array.isArray(v) ? v : [v]).forEach(x => { const k = String(x).trim().toUpperCase(); c.set(k, (c.get(k) || 0) + 1); });
   });
-  return [...c].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  return [...c].map(([k, value]) => ({ label: shortLabel(k), value })).sort((a, b) => b.value - a.value);
 }
 /** Toggle button group; onChange(key). Returns the container element's HTML and wires after insert via wireToggles. */
 function toggles(id, options, active) {

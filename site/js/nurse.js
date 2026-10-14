@@ -38,11 +38,11 @@
       <div class="card" style="margin-top:12px"><h3>Schools <span class="sub">Click a column heading to sort</span></h3><div class="scroll" id="nurse-table"></div></div>`;
 
     sortableTable($("#nurse-table"), [
-      { key: "school", label: "School" }, { key: "district", label: "District" }, { key: "qual", label: "Nurse qualification" },
+      { key: "school", label: "School" }, { key: "district", label: "District" }, { key: "qual", label: "Nurse qualification", render: v => esc(shortLabel(v)) },
       { key: "days", label: "Days / week", num: true }, { key: "hours", label: "Duty hours", num: true },
       { key: "weekend", label: "Weekend", render: v => v === true ? statusChip("Yes", "good") : v === false ? "No" : "—" },
-      { key: "sickbay", label: "Sick bay" }, { key: "rdt", label: "RDT types", render: v => esc((v || []).join(", ") || "—") }, { key: "act", label: "ACT types", render: v => esc((v || []).join(", ") || "—") },
-      { key: "stored", label: "Supplies stored" },
+      { key: "sickbay", label: "Sick bay", render: v => esc(shortLabel(v)) }, { key: "rdt", label: "RDT types", render: v => esc((v || []).map(shortLabel).join(", ") || "—") }, { key: "act", label: "ACT types", render: v => esc((v || []).map(shortLabel).join(", ") || "—") },
+      { key: "stored", label: "Supplies stored", render: v => esc(shortLabel(v)) },
     ], schools.map(s => { const a = s.F.answers; return { school: s.name, district: s.district, qual: a.nurse_qualification_resolved ?? null, days: a.working_days_n ?? null, hours: a.duty_hours ?? null, weekend: a.weekend_cover, sickbay: a.dedicated_sickbay ?? null, rdt: a.type_rdt_used, act: a.type_act_used, stored: a.where_supplies_stored ?? null }; }), { sortKey: "school" });
   }
   PAGES.nurse = { title: "Nurse and testing", render, filters: true };

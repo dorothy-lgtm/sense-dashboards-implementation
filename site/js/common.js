@@ -10,7 +10,8 @@ const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const sum = a => a.reduce((x, y) => x + (y || 0), 0);
 const isNum = v => typeof v === "number" && !Number.isNaN(v);
-const yes = v => String(v ?? "").trim().toLowerCase() === "yes";
+const yes = v => { const s = String(v ?? "").trim().toLowerCase(); return /^(yes|all|some|present|partial)\b/.test(s) || s === "y"; };
+const no = v => { const s = String(v ?? "").trim().toLowerCase(); return /^(no|none|absent)\b/.test(s) || s === "n"; };
 
 let SUMMARY = null, ROSTER = null, METRICS = null;
 const PAGES = {};                        // key → { title, render(arg), filters: bool }

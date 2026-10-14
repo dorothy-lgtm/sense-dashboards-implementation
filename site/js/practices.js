@@ -35,7 +35,7 @@
 
     const flag = (v, warn = false) => v === true ? statusChip("Yes", warn ? "warning" : "good") : v === false ? "No" : "—";
     sortableTable($("#prac-table"), [
-      { key: "school", label: "School" }, { key: "district", label: "District" }, { key: "type", label: "Type" },
+      { key: "school", label: "School" }, { key: "district", label: "District" }, { key: "type", label: "Type", render: v => esc(shortLabel(v)) },
       { key: "hours", label: "Duty hours", num: true },
       { key: "refers_severe", label: "Refers severe", render: v => flag(v) }, { key: "mentions_rdt", label: "RDT", render: v => flag(v) },
       { key: "mentions_clinical", label: "Clinical", render: v => flag(v) }, { key: "mentions_microscopy", label: "Microscopy", render: v => flag(v) },
