@@ -163,10 +163,11 @@ function renderRecruit() {
       ${flagTile("Awaiting assessment", t.awaiting_assessment, t.schools_recruited, "var(--warning)",
          t.median_open_lag_days !== null ? `median wait ${t.median_open_lag_days} d · longest ${t.max_open_lag_days} d` : "")}
       ${tile("Screened (Annex F)", num(t.screening_submissions), elig || "", !!elig)}
+      ${t.schools_listed ? tile("Schools in pick-list", num(t.schools_listed), `${num(t.schools_on_roster)} with a record${Object.keys(t.listed_prefixes_without_submissions || {}).length ? ` · ${Object.keys(t.listed_prefixes_without_submissions).length} district prefix(es) with no submissions yet` : ""}`) : ""}
     </div>
 
     <h3>Recruitment by district <span class="meta">— click a district for its schools</span></h3>
-    <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs target where a target is set</div>
+    <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs the district's target, or else vs schools listed in the Kobo school-code pick-list</div>
     <div class="card scroll" id="districts"></div>
 
     <h3 id="schools-title">Schools</h3>
@@ -181,16 +182,16 @@ function renderRecruit() {
 
 function renderDistricts() {
   const ds = ROSTER.districts;
-  const maxRef = Math.max(1, ...ds.map(d => d.target_schools || d.recruited));
+  const maxRef = Math.max(1, ...ds.map(d => d.target_schools || d.listed_schools || d.recruited));
   const rows = ds.map(d => {
-    const ref = d.target_schools || maxRef;
-    const bar = `<div class="cellbar"><div class="track"><div style="width:${Math.min(100, 100 * d.recruited / ref)}%"></div><div class="asd" style="width:${Math.min(100, 100 * d.assessed / ref)}%"></div></div><span>${num(d.recruited)}${d.target_schools ? `<span class="meta"> / ${d.target_schools}</span>` : ""}</span></div>`;
+    const ref = d.target_schools || d.listed_schools || maxRef;
+    const bar = `<div class="cellbar"><div class="track"><div style="width:${Math.min(100, 100 * d.recruited / ref)}%"></div><div class="asd" style="width:${Math.min(100, 100 * d.assessed / ref)}%"></div></div><span>${num(d.recruited)}${ref !== maxRef ? `<span class="meta"> / ${ref}</span>` : ""}</span></div>`;
     const opened = d.date_opened ? fmtD(d.date_opened) : (d.entered ? `<span class="meta">entered ${fmtD(d.first_recruited)}</span>` : `<span class="meta">—</span>`);
     const lag = d.awaiting_assessment ? `${d.awaiting_assessment}${d.max_open_lag_days !== null ? ` <span class="meta">(up to ${d.max_open_lag_days} d)</span>` : ""}` : `<span class="meta">0</span>`;
-    return [esc(d.district) + (d.in_config ? "" : ` <span class="chip">not in districts.csv</span>`), esc(d.sub_region || ""), opened, num(d.screened), bar, num(d.assessed), lag];
+    return [esc(d.district) + (d.in_config ? "" : ` <span class="chip">not in districts.csv</span>`), esc(d.sub_region || ""), opened, num(d.listed_schools), num(d.screened), bar, num(d.assessed), lag];
   });
   $("#districts").innerHTML = table(
-    [{t:"District"},{t:"Sub-region"},{t:"Opened"},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
+    [{t:"District"},{t:"Sub-region"},{t:"Opened"},{t:"Listed",num:true},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
     rows, "No districts yet", (r, i) => `class="row" data-d="${esc(ds[i].district)}" aria-selected="${ds[i].district === district}"`);
   $("#districts").querySelectorAll("tr.row").forEach(tr => tr.onclick = () => selectDistrict(tr.dataset.d === district ? null : tr.dataset.d));
 }

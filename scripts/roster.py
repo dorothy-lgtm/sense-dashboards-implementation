@@ -212,6 +212,10 @@ def main() -> int:
         if no_code:
             notes.append(f"{tag}: {no_code} submission(s) have no school code (screened-out or incomplete) and are not on the roster")
 
+    # The school_code pick-list = every pre-registered school (the sampling frame), by district prefix
+    study_list = {code: (lab if lab and lab != code else None) for code, lab in code_labels.items()}
+    listed_by_prefix: Counter = Counter(code[:prefix_len] for code in study_list)
+
     # F rows without a code: count screening outcomes anyway
     eq = field(F_q, CFG.get("eligibility_field", "overall_status"))
     screening_outcomes = Counter(str(label(eq, val(s, eq), F_ch) or "(blank)") for s in F_subs)
@@ -348,16 +352,22 @@ def main() -> int:
                                 "date_opened": (r.get("date_opened") or "").strip() or None,
                                 "notes": (r.get("notes") or "").strip() or None}
     observed = {r["district"] for r in rows if r["district"]}
+    # prefix → district (from submissions); prefixes with no submissions yet stay unnamed
+    prefix_to_district = {pfx: cnt.most_common(1)[0][0] for pfx, cnt in prefix_districts.items()}
+    district_to_prefix = {d: pfx for pfx, d in prefix_to_district.items()}
+    unnamed_prefixes = {pfx: n for pfx, n in listed_by_prefix.items() if pfx not in prefix_to_district}
     districts = []
     for d in sorted(cfg_d.keys() | observed):
         c = cfg_d.get(d, {})
         rs = [r for r in rows if r["district"] == d]
+        pfx = district_to_prefix.get(d)
         rec = [r for r in rs if r["recruited"]]
         asd = [r for r in rec if r["assessed"]]
         lags = [r["lag_days"] for r in rec if not r["assessed"] and r["lag_days"] is not None]
         districts.append({
             "district": d, "sub_region": c.get("sub_region"), "in_config": d in cfg_d,
             "target_schools": c.get("target_schools"), "date_opened": c.get("date_opened"), "notes": c.get("notes"),
+            "code_prefix": pfx, "listed_schools": listed_by_prefix.get(pfx) if pfx else None,
             "opened": bool(c.get("date_opened")), "entered": bool(rec),
             "screened": sum(1 for r in rs if r["screened"]),
             "recruited": len(rec), "assessed": len(asd), "awaiting_assessment": len(rec) - len(asd),
@@ -385,6 +395,8 @@ def main() -> int:
         "districts_opened": sum(1 for d in districts if d["opened"]) if any_dates else None,
         "districts_entered": sum(1 for d in districts if d["entered"]),
         "schools_on_roster": len(rows),
+        "schools_listed": len(study_list),
+        "listed_prefixes_without_submissions": unnamed_prefixes,
         "schools_screened": sum(1 for r in rows if r["screened"]),
         "screening_submissions": len(F_subs),
         "screening_outcomes": dict(screening_outcomes),
@@ -409,6 +421,8 @@ def main() -> int:
         "totals": totals,
         "districts": districts,
         "schools": rows,
+        "study_list": [{"code": c, "label": l, "district": prefix_to_district.get(c[:prefix_len]),
+                        "on_roster": c in schools} for c, l in sorted(study_list.items())],
         "schools_without_district": [r["code"] for r in no_district],
         "assessment_unmatched": unmatched,
         "assessment_ambiguous": ambiguous,
