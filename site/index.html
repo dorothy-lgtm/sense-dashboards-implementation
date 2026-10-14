@@ -149,25 +149,25 @@ function renderRecruit() {
   if (!ROSTER) { el.innerHTML = `<p class="empty">roster.json not available yet.</p>`; return; }
   const t = ROSTER.totals, target = t.recruitment_target;
   const pct = target ? Math.round(1000 * t.schools_recruited / target) / 10 : null;
-  const openedTile = t.districts_opened !== null
-    ? tile("Districts opened", num(t.districts_opened), `of ${num(t.districts_in_config)} listed`)
-    : tile("Districts opened", "—", "add date_opened in config/districts.csv", true);
+  const openedTile = tile("Districts opened", num(t.districts_opened), `entry-meeting form submitted · ${num(t.districts_in_config)} study districts` +
+      (t.districts_entered_without_meeting_form ? `<br><span class="flag"><span class="dot" style="background:var(--warning)"></span>${num(t.districts_entered_without_meeting_form)} more have schools but no meeting form</span>` : ""));
+  const pipelineTile = tile("Districts in pipeline", `${num(t.districts_prep + t.districts_pre_entry)}`, `${num(t.districts_prep)} preparation · ${num(t.districts_pre_entry)} pre-entry done · ${num(t.districts_scheduled)} with a meeting date set`);
   const elig = Object.entries(t.screening_outcomes || {}).map(([k, v]) => `${esc(titleCase(k))}: ${num(v)}`).join(" · ");
   el.innerHTML = `
     <div class="tiles">
       ${openedTile}
       ${tile("Districts entered", num(t.districts_entered), "≥1 school with Annex H")}
+      ${pipelineTile}
       <div class="card tile"><div class="label">Schools recruited</div><div class="value">${num(t.schools_recruited)}<span class="meta"> / ${num(target)}</span></div>
-        <div class="bar"><div style="width:${Math.min(100, pct)}%"></div></div><div class="note">${pct}% · +${num(t.recruited_last_7d)} in last 7 days</div></div>
+        <div class="bar"><div style="width:${Math.min(100, pct)}%"></div></div><div class="note">${pct}% · +${num(t.recruited_last_7d)} in last 7 days${t.districts_with_target ? ` · district targets known for ${num(t.districts_with_target)} districts (${num(t.target_schools_known)} schools)` : ""}</div></div>
       ${tile("Assessment forms entered", num(t.schools_assessed), `${num(t.assessment_submissions)} forms, ${num(t.assessment_matched)} matched to a recruited school`)}
       ${flagTile("Awaiting assessment", t.awaiting_assessment, t.schools_recruited, "var(--warning)",
          t.median_open_lag_days !== null ? `median wait ${t.median_open_lag_days} d · longest ${t.max_open_lag_days} d` : "")}
       ${tile("Screened (Annex F)", num(t.screening_submissions), elig || "", !!elig)}
-      ${t.district_prefixes_total ? tile("District code blocks", num(t.district_prefixes_total), `${num((t.district_prefixes_without_submissions || []).length)} with no submissions yet`) : ""}
     </div>
 
     <h3>Recruitment by district <span class="meta">— click a district for its schools</span></h3>
-    <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs the district's target where one is set in config/districts.csv</div>
+    <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs the district's target (pre-entry form, or config/districts.csv) &nbsp; · stage from the district checklists: preparation → pre-entry → opened (entry meeting)</div>
     <div class="card scroll" id="districts"></div>
 
     <h3 id="schools-title">Schools</h3>
@@ -180,18 +180,28 @@ function renderRecruit() {
   renderIssues();
 }
 
+const STAGE_COLOR = { 0: "var(--axis)", 1: "var(--warning)", 2: "var(--warning)", 3: "var(--good)" };
+function stageCell(d) {
+  const col = d.entered && !d.opened ? "var(--serious)" : STAGE_COLOR[d.stage_rank];
+  let detail = "";
+  if (d.opened) detail = `${fmtD(d.date_opened)}${d.meeting ? ` · ${d.meeting.schools_attended ?? "?"} schools attended${String(d.meeting.mou_signed).toLowerCase() === "yes" ? " · MOU" : ""}` : ""}`;
+  else if (d.scheduled_meeting) detail = `meeting ${fmtD(d.scheduled_meeting)}`;
+  else if (d.pre_entry) detail = `${d.pre_entry.confirmed ?? "?"} schools confirmed`;
+  else if (d.entered) detail = `first school ${fmtD(d.first_recruited)}`;
+  return `<span class="flag"><span class="dot" style="background:${col}"></span>${esc(d.stage)}</span>${detail ? `<br><span class="meta">${detail}</span>` : ""}`;
+}
 function renderDistricts() {
-  const ds = ROSTER.districts;
+  const ds = [...ROSTER.districts].sort((a, b) => (b.entered - a.entered) || (b.stage_rank - a.stage_rank) || a.district.localeCompare(b.district));
   const maxRef = Math.max(1, ...ds.map(d => d.target_schools || d.recruited));
   const rows = ds.map(d => {
     const ref = d.target_schools || maxRef;
     const bar = `<div class="cellbar"><div class="track"><div style="width:${Math.min(100, 100 * d.recruited / ref)}%"></div><div class="asd" style="width:${Math.min(100, 100 * d.assessed / ref)}%"></div></div><span>${num(d.recruited)}${ref !== maxRef ? `<span class="meta"> / ${ref}</span>` : ""}</span></div>`;
-    const opened = d.date_opened ? fmtD(d.date_opened) : (d.entered ? `<span class="meta">entered ${fmtD(d.first_recruited)}</span>` : `<span class="meta">—</span>`);
-    const lag = d.awaiting_assessment ? `${d.awaiting_assessment}${d.max_open_lag_days !== null ? ` <span class="meta">(up to ${d.max_open_lag_days} d)</span>` : ""}` : `<span class="meta">0</span>`;
-    return [esc(d.district) + (d.in_config ? "" : ` <span class="chip">not in districts.csv</span>`), esc(d.sub_region || ""), opened, num(d.screened), bar, num(d.assessed), lag];
+    const lag = d.awaiting_assessment ? `${d.awaiting_assessment}${d.max_open_lag_days !== null ? ` <span class="meta">(up to ${d.max_open_lag_days} d)</span>` : ""}` : `<span class="meta">${d.recruited ? 0 : "—"}</span>`;
+    const target = d.target_schools !== null ? `${num(d.target_schools)}<br><span class="meta">${esc(d.target_source || "")}</span>` : `<span class="meta">—</span>`;
+    return [esc(d.district) + (d.in_config ? "" : ` <span class="chip">not in districts.csv</span>`), esc(d.sub_region || ""), stageCell(d), target, num(d.screened), bar, num(d.assessed), lag];
   });
   $("#districts").innerHTML = table(
-    [{t:"District"},{t:"Sub-region"},{t:"Opened"},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
+    [{t:"District"},{t:"Sub-region"},{t:"Stage"},{t:"Target schools",num:true},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
     rows, "No districts yet", (r, i) => `class="row" data-d="${esc(ds[i].district)}" aria-selected="${ds[i].district === district}"`);
   $("#districts").querySelectorAll("tr.row").forEach(tr => tr.onclick = () => selectDistrict(tr.dataset.d === district ? null : tr.dataset.d));
 }

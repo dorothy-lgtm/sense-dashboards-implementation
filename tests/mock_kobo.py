@@ -17,7 +17,8 @@ from urllib.parse import parse_qs, urlparse
 
 random.seed(11)
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
-UIDS = {"F": "ak95trCoSBkM3aKqZysbdB", "G": "axDMBKEfMJYtZ5LiHqCMbb", "H": "aokEegtT2X8oyCDfQCWeZR", "A": "ajj7kZq2be5XDFSio3zJHu"}
+UIDS = {"F": "ak95trCoSBkM3aKqZysbdB", "G": "axDMBKEfMJYtZ5LiHqCMbb", "H": "aokEegtT2X8oyCDfQCWeZR", "A": "ajj7kZq2be5XDFSio3zJHu",
+        "DM": "aGUvS64iEXZ6iANRKySPRT", "DE": "a7MfPjqYzU6MVRefeukEpF", "DP": "aUngKSUyshfP9f2ncmgpzF"}
 DISTRICTS = {"LUWERO": "BUGANDA", "NAKASEKE": "BUGANDA", "HOIMA": "BUNYORO", "KAGADI": "BUNYORO", "KIBAALE": "BUNYORO",
              "KAKUMIRO": "BUNYORO", "KIKUUBE": "BUNYORO", "MASINDI": "BUNYORO", "KIRYANDONGO": "BUNYORO",
              "BULIISA": "BUNYORO", "BUKEDEA": "TESO", "GULU CITY": "ACHOLI", "KARENGA": "KARAMOJA"}
@@ -110,6 +111,32 @@ SURVEYS = {
         {"type": "select_one", "name": "data_officer", "$xpath": "School_assessment_grp/data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
     ],
 }
+SURVEYS["DM"] = [
+    {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+    {"type": "select_one", "name": "district", "$xpath": "School_location_info_grp/district", "label": ["District"], "select_from_list_name": "districts"},
+    {"type": "text", "name": "district_code", "$xpath": "School_location_info_grp/district_code", "label": ["District Code"]},
+    {"type": "date", "name": "meeting_entry_date", "$xpath": "School_location_info_grp/meeting_entry_date", "label": ["Entry meeting date"]},
+    {"type": "select_one", "name": "mous_signed", "$xpath": "School_location_info_grp/mous_signed", "label": ["MOU signed"], "select_from_list_name": "yn"},
+    {"type": "integer", "name": "num_schools_attended", "$xpath": "School_location_info_grp/num_schools_attended", "label": ["Schools attended"]},
+    {"type": "select_one", "name": "Entrant_Initials", "$xpath": "School_location_info_grp/Entrant_Initials", "label": ["Initials"], "select_from_list_name": "officers"},
+]
+SURVEYS["DE"] = [
+    {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+    {"type": "select_one", "name": "district", "$xpath": "meeting_info_grp/district", "label": ["District"], "select_from_list_name": "districts"},
+    {"type": "text", "name": "district_code", "$xpath": "meeting_info_grp/district_code", "label": ["District Code"]},
+    {"type": "integer", "name": "num_schools_mobilized", "$xpath": "meeting_info_grp/num_schools_mobilized", "label": ["Target schools mobilized"]},
+    {"type": "integer", "name": "num_conf_attendance", "$xpath": "meeting_info_grp/num_conf_attendance", "label": ["Confirmed"]},
+    {"type": "date", "name": "resched_meeting_date", "$xpath": "meeting_info_grp/resched_meeting_date", "label": ["New date"]},
+]
+SURVEYS["DP"] = [
+    {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+    {"type": "select_one", "name": "district", "$xpath": "meeting_info_grp/district", "label": ["District"], "select_from_list_name": "districts"},
+    {"type": "text", "name": "district_code", "$xpath": "meeting_info_grp/district_code", "label": ["District Code"]},
+    {"type": "select_one", "name": "list_schools_obtained", "$xpath": "meeting_info_grp/list_schools_obtained", "label": ["List obtained"], "select_from_list_name": "yn"},
+    {"type": "date", "name": "entry_meeting_date", "$xpath": "meeting_info_grp/entry_meeting_date", "label": ["Entry meeting date"]},
+    {"type": "text", "name": "deo_name", "$xpath": "meeting_info_grp/deo_name", "label": ["DEO name"]},
+    {"type": "text", "name": "deo_contact", "$xpath": "meeting_info_grp/deo_contact", "label": ["DEO phone"]},
+]
 CHOICES = (choices_schools()
            + [{"list_name": "yn", "name": "yes", "label": ["Yes"]}, {"list_name": "yn", "name": "no", "label": ["No"]}]
            + [{"list_name": "officers", "name": o.lower(), "label": [o]} for o in OFFICERS]
@@ -169,6 +196,21 @@ def build():
                           "School_assessment_grp/springfiles_received": "yes", "School_assessment_grp/consent_signed": random.choice(["yes", "no"]),
                           "School_assessment_grp/training_conducted": random.choice(["yes", "no"]), "School_assessment_grp/retros_data_collected": "yes",
                           "School_assessment_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
+    base = {"_submitted_by": "pa_sense", "_attachments": [], "_geolocation": [None, None]}
+    for i, d in enumerate(["hoima", "kiryandongo", "kikuube"]):
+        sid += 1; t = datetime(2026, 10, 5, 6, 30, tzinfo=timezone.utc)
+        data["DM"].append({**base, "_id": sid, "_uuid": f"dm-{sid}", "_submission_time": ts(t), "start": t.isoformat(), "end": (t + timedelta(minutes=9)).isoformat(),
+                           "School_location_info_grp/district": d, "School_location_info_grp/district_code": "02", "School_location_info_grp/meeting_entry_date": "2026-09-29",
+                           "School_location_info_grp/mous_signed": "yes", "School_location_info_grp/num_schools_attended": 7 + i, "School_location_info_grp/Entrant_Initials": "te"})
+    for i, (d, n) in enumerate([("bukedea", 9), ("luwero", 20), ("karenga", 4)]):
+        sid += 1; t = datetime(2026, 10, 2, 4, 0, tzinfo=timezone.utc)
+        data["DE"].append({**base, "_id": sid, "_uuid": f"de-{sid}", "_submission_time": ts(t), "start": t.isoformat(), "end": (t + timedelta(minutes=5)).isoformat(),
+                           "meeting_info_grp/district": d, "meeting_info_grp/district_code": "07", "meeting_info_grp/num_schools_mobilized": n, "meeting_info_grp/num_conf_attendance": n - 1})
+    for d in ["gulu_city", "karenga"]:
+        sid += 1; t = datetime(2026, 10, 3, 13, 0, tzinfo=timezone.utc)
+        data["DP"].append({**base, "_id": sid, "_uuid": f"dp-{sid}", "_submission_time": ts(t), "start": t.isoformat(), "end": (t + timedelta(minutes=5)).isoformat(),
+                           "meeting_info_grp/district": d, "meeting_info_grp/district_code": "01", "meeting_info_grp/list_schools_obtained": "yes",
+                           "meeting_info_grp/entry_meeting_date": "2026-10-20", "meeting_info_grp/deo_name": "DEO PERSON", "meeting_info_grp/deo_contact": "0788000000"})
     for k in data:
         data[k].sort(key=lambda s: s["_id"])
     return data

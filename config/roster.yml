@@ -15,6 +15,21 @@ forms:
   structure:   structure_vector    # Annex G
   recruitment: retrospective       # Annex H → "recruited"
   assessment:  school_assessment   # checklist; joined by school name + district
+  # district-level checklists (one row per district visit)
+  district_prep:      district_entry_prep    # entry meeting scheduled, target list obtained
+  district_pre_entry: district_pre_entry     # num_schools_mobilized = target schools
+  district_meeting:   district_meeting       # meeting_entry_date = district OPENED
+
+# District form fields
+district_fields:
+  prep_meeting_date: entry_meeting_date
+  prep_list_obtained: list_schools_obtained
+  pre_entry_target: num_schools_mobilized
+  pre_entry_confirmed: num_conf_attendance
+  meeting_date: meeting_entry_date
+  meeting_mou_signed: mous_signed
+  meeting_schools_attended: num_schools_attended
+  meeting_microplan: microplan_done
 
 # Annex F eligibility: the calculate field and which of its values mean "eligible".
 # Leave `eligible_values` empty to just show the distribution of values on the dashboard.
