@@ -51,3 +51,4 @@ regions_mistyped_as_district: [BUNYORO, BUGANDA, TESO, ACHOLI, LANGO, KARAMOJA, 
 name_match:
   strip_tokens: [SECONDARY, SCHOOL, SCHOOLS, SEC, SCH, S.S, S.S., SS, S S, HIGH, COLLEGE, COLLEGES, VOCATIONAL, INSTITUTE, THE]
   min_similarity: 0.86             # difflib ratio for fuzzy matches within the same district
+  min_token_similarity: 0.6        # word-overlap match (≥2 shared words; subset of words = 1.0)

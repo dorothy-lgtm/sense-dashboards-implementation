@@ -119,6 +119,26 @@ def norm_name(v) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+def stem(t: str) -> str:
+    return t[:-1] if len(t) > 3 and t.endswith("S") else t
+
+
+def core_tokens(v) -> set[str]:
+    return {stem(t) for t in core_name(v).split()}
+
+
+def token_match(a: str, b: str) -> float | None:
+    """Similarity of two school names by words: 1.0 if one is a subset of the other (≥2 shared
+    words), else the Jaccard overlap; None if fewer than 2 words are shared."""
+    ta, tb = core_tokens(a), core_tokens(b)
+    shared = ta & tb
+    if len(shared) < 2:
+        return None
+    if ta <= tb or tb <= ta:
+        return 1.0
+    return len(shared) / len(ta | tb)
+
+
 def core_name(v) -> str:
     # drop filler words and 1-letter fragments left by "S.S", "H/S", "St. Mary's" etc.
     toks = [t for t in norm_name(v).split() if t not in STRIP and (len(t) > 1 or t.isdigit())]
@@ -212,7 +232,7 @@ def main() -> int:
     name_codes: dict[str, list[str]] = defaultdict(list)
     for sc in schools.values():
         for n in ([sc["name"]] if sc["name"] else []) + sc["name_variants"]:
-            key = (sc["district"] or "") + "|" + core_name(n)
+            key = " ".join(sorted(core_tokens(n)))
             if sc["code"] not in name_codes[key]:
                 name_codes[key].append(sc["code"])
     duplicate_codes = sorted({tuple(sorted(v)) for v in name_codes.values() if len(v) > 1})
@@ -251,20 +271,30 @@ def main() -> int:
         if not cands:
             pool = [c for c in schools.values() if not a_dist or c["district"] == a_dist or c["district"] is None]
             scored = []
+            min_tok = float(CFG["name_match"].get("min_token_similarity", 0.6))
             for c in pool:
+                best_c = 0.0
                 for n in ([c["name"]] if c["name"] else []) + c["name_variants"]:
                     r = difflib.SequenceMatcher(None, core_name(a_name), core_name(n)).ratio()
-                    if r >= min_sim:
-                        scored.append((r, c))
+                    tm = token_match(a_name, n)
+                    if tm is not None and tm >= min_tok:
+                        r = max(r, tm)
+                    best_c = max(best_c, r)
+                if best_c >= min(min_sim, min_tok):
+                    scored.append((best_c, c))
             scored.sort(key=lambda x: -x[0])
             if scored:
                 best = scored[0][1]
                 if len(scored) > 1 and scored[1][1] is not best and scored[1][0] >= scored[0][0] - 0.02:
-                    ambiguous.append({"id": rec["id"], "name": a_name, "district": a_dist,
-                                      "candidates": [f"{c['code']} {c['name'] or ''}".strip() for _, c in scored[:3]]})
-                    continue
-                cands, method = [best], f"fuzzy {scored[0][0]:.2f}"
+                    cands, method = [c for _, c in scored[:3]], "fuzzy"
+                else:
+                    cands, method = [best], f"fuzzy {scored[0][0]:.2f}"
         uniq = {c["code"]: c for c in cands}
+        if len(uniq) > 1:   # duplicate-code pairs: prefer the code that carries the Annex H record
+            recruited_c = [c for c in uniq.values() if c["H"]]
+            if len(recruited_c) == 1:
+                uniq = {recruited_c[0]["code"]: recruited_c[0]}
+                method = (method or "exact") + " → recruited code"
         if len(uniq) == 1:
             sc = next(iter(uniq.values()))
             rec["match"] = method
@@ -341,8 +371,10 @@ def main() -> int:
     recruited_not_screened = [{"code": r["code"], "name": r["name"], "district": r["district"]} for r in rows if r["recruited"] and not r["screened"]]
     suspect_names = [{"code": r["code"], "district": r["district"], "forms": r["suspect_name_forms"], "name_known": not r["name_missing"]}
                      for r in rows if r["suspect_name_forms"]]
-    dup_code_rows = [{"codes": list(codes), "name": next((r["name"] for r in rows if r["code"] == codes[0]), ""),
-                      "district": next((r["district"] for r in rows if r["code"] == codes[0]), None)} for codes in duplicate_codes]
+    by_code = {r["code"]: r for r in rows}
+    dup_code_rows = [{"codes": list(codes), "name": by_code[codes[0]]["name"],
+                      "districts": sorted({str(by_code[c]["district"]) for c in codes}),
+                      "forms": {c: "".join(k for k, v in by_code[c]["forms"].items() if v) for c in codes}} for codes in duplicate_codes]
 
     rec_rows = [r for r in rows if r["recruited"]]
     asd_rows = [r for r in rec_rows if r["assessed"]]

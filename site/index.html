@@ -219,7 +219,7 @@ function renderSchools() {
     : `All schools — ${rec.length} recruited <span class="meta">(${all.length} on roster)</span>`;
   const clear = $("#clear"); if (clear) clear.onclick = e => { e.preventDefault(); selectDistrict(null); };
   const rows = all.map(s => [
-    `<b>${esc(s.name)}</b>${s.suspect_name_forms.length ? ` <span class="chip no" title="A person's name appears in the school-name field">name field wrong in ${esc(s.suspect_name_forms.join("/"))}</span>` : ""}<br><span class="meta">${esc(s.code)}${s.name_variants.length ? ` · also entered as: ${esc(s.name_variants.join("; "))}` : ""}</span>`,
+    `<b>${esc(s.name)}</b>${s.suspect_name_forms.length ? ` <span class="chip no" title="The school-name field in this form does not look like a school name (possibly a person's name)">check name in ${esc(s.suspect_name_forms.join("/"))}</span>` : ""}<br><span class="meta">${esc(s.code)}${s.name_variants.length ? ` · also entered as: ${esc(s.name_variants.join("; "))}` : ""}</span>`,
     district ? "" : esc(s.district || "?") + (s.district_conflict ? ` <span class="chip no">district differs across forms</span>` : ""),
     statusCell(s),
     s.eligibility ? esc(titleCase(s.eligibility)) : "<span class='meta'>—</span>",
@@ -246,8 +246,8 @@ function renderIssues() {
         un.map(u => [u.id, esc(u.name || "(blank)"), esc(u.district || "—"), esc(u.reason)])
           .concat(am.map(a => [a.id, esc(a.name), esc(a.district || "—"), "ambiguous — could be: " + esc(a.candidates.join(" | "))])), "All assessment forms matched")}</div>
     <div class="card"><h3>Roster inconsistencies (${sus.length + dupC.length + anr.length + rns.length + conflicts.length + noD.length})</h3>
-      ${dupC.length ? `<p><b>Same school under two codes</b> — one form used a different code; the school is split in two:<ul>${li(dupC.map(d => `${esc(d.codes.join(" + "))} — ${esc(d.name)} (${esc(d.district || "?")})`))}</ul></p>` : ""}
-      ${sus.length ? `<p><b>A person's name in the school-name field</b> (text withheld here; open the record in Kobo):<ul>${li(sus.map(x => `${esc(x.code)} in Annex ${esc(x.forms.join("/"))} (${esc(x.district || "?")})${x.name_known ? "" : " — no valid school name in any form"}`))}</ul></p>` : ""}
+      ${dupC.length ? `<p><b>Same school under two codes</b> — one form used a different code; the school is split in two:<ul>${li(dupC.map(d => `${esc(d.name)} — ${d.codes.map(c => `${esc(c)} (forms ${esc(d.forms[c] || "–")})`).join(" and ")}${d.districts.length > 1 ? ` — codes belong to different districts: ${esc(d.districts.join(" / "))}` : ` (${esc(d.districts[0])})`}`))}</ul></p>` : ""}
+      ${sus.length ? `<p><b>School-name field doesn't look like a school name</b> — probably a person's name typed in the wrong box (text withheld here; open the record in Kobo):<ul>${li(sus.map(x => `${esc(x.code)} in Annex ${esc(x.forms.join("/"))} (${esc(x.district || "?")})${x.name_known ? "" : " — no valid school name in any form"}`))}</ul></p>` : ""}
       ${anr.length ? `<p><b>Assessment entered but no Annex H</b> (not counted as recruited):<ul>${li(anr.map(x => `${esc(x.code)} ${esc(x.name)} (${esc(x.district || "?")}), assessed ${fmtD(x.assessed_date)}`))}</ul></p>` : ""}
       ${rns.length ? `<p><b>Annex H entered but no Annex F screening form</b>:<ul>${li(rns.map(x => `${esc(x.code)} ${esc(x.name)} (${esc(x.district || "?")})`))}</ul></p>` : ""}
       ${conflicts.length ? `<p><b>District typed differently from the code's district</b>: ${conflicts.map(s => esc(`${s.code} (typed ${s.district_typed || "blank"}, code says ${s.district})`)).join("; ")}</p>` : ""}
