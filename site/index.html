@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SENSE Field Monitor</title>
+<meta name="description" content="Submission progress and data quality for the SENSE study KoboCollect forms">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --series-1: #2a78d6; --seq-200: #9ec5f4;
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --good-text: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --seq-200: #1c5cab; --good-text: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --seq-200: #1c5cab; --good-text: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 16px; margin: 28px 0 10px; }
+  h3 { font-size: 13px; color: var(--ink-2); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .sub { color: var(--ink-2); margin-top: 4px; }
+  .stale { color: var(--critical); font-weight: 600; }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; }
+  .overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+  .overview .card { cursor: pointer; }
+  .overview .card:hover, .overview .card[aria-current="true"] { outline: 2px solid var(--series-1); outline-offset: -1px; }
+  .fname { font-weight: 600; }
+  .big { font-size: 28px; font-weight: 600; margin: 4px 0 2px; }
+  .bar { height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; margin: 8px 0 6px; }
+  .bar > div { height: 100%; background: var(--series-1); border-radius: 3px; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .tile .label { color: var(--ink-2); font-size: 12px; }
+  .tile .value { font-size: 24px; font-weight: 600; margin-top: 2px; }
+  .tile .note { color: var(--muted); font-size: 12px; }
+  .flag { display: inline-flex; align-items: center; gap: 6px; }
+  .flag .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .chart-wrap { position: relative; }
+  svg text { fill: var(--muted); font-size: 11px; }
+  .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--ring); border-radius: 6px; padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); display: none; white-space: nowrap; }
+  details summary { cursor: pointer; color: var(--ink-2); }
+  .scroll { max-height: 340px; overflow: auto; }
+  .tile .value.small { font-size: 14px; font-weight: 500; line-height: 1.5; }
+  .empty { color: var(--muted); font-style: italic; }
+  code { font-size: 12px; background: var(--grid); padding: 1px 4px; border-radius: 3px; }
+  @media (max-width: 600px) { .big { font-size: 24px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>SENSE Field Monitor</h1>
+  <div class="sub" id="freshness">Loading…</div>
+  <div class="overview" id="overview"></div>
+  <section id="detail"></section>
+</main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtDT = iso => iso ? new Date(iso).toLocaleString("en-GB", { timeZone: "Africa/Kampala", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+const fmtD = iso => iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "";
+const num = v => (v === null || v === undefined) ? "—" : v.toLocaleString("en-GB");
+
+let DATA = null, current = null;
+
+async function load() {
+  const r = await fetch("data/summary.json", { cache: "no-store" });
+  if (!r.ok) { $("#freshness").textContent = "No summary.json yet — the first scheduled run has not completed."; return; }
+  DATA = await r.json();
+  const pulled = new Date(DATA.pulled_at || DATA.generated_at);
+  const ageH = (Date.now() - pulled) / 36e5;
+  $("#freshness").innerHTML = `Data pulled from KoboToolbox ${fmtDT(pulled.toISOString())} EAT` +
+    (ageH > 6 ? ` <span class="stale">(${Math.round(ageH)} h old — check the GitHub Action)</span>` : "");
+  renderOverview();
+  const hash = location.hash.slice(1);
+  select(DATA.forms.find(f => f.key === hash)?.key || DATA.forms[0].key);
+}
+
+function renderOverview() {
+  $("#overview").innerHTML = DATA.forms.map(f => {
+    if (f.error) return `<div class="card" data-key="${f.key}"><div class="fname">${esc(f.name)}</div><div class="meta stale">${esc(f.error)}</div></div>`;
+    const t = f.totals, pct = t.pct_of_target;
+    return `<div class="card" data-key="${f.key}" tabindex="0">
+      <div class="fname">${esc(f.name)}</div>
+      <div class="big">${num(t.submissions)}</div>
+      ${t.target ? `<div class="bar"><div style="width:${Math.min(100, pct)}%"></div></div>
+      <div class="meta">${pct}% of ${num(t.target)} · ` : `<div class="meta">`}+${t.last_24h} in 24 h · last ${fmtDT(t.last_submission)}</div>
+    </div>`;
+  }).join("");
+  $("#overview").querySelectorAll(".card").forEach(c => {
+    c.onclick = () => select(c.dataset.key);
+    c.onkeydown = e => { if (e.key === "Enter" || e.key === " ") select(c.dataset.key); };
+  });
+}
+
+function select(key) {
+  current = key;
+  location.hash = key;
+  $("#overview").querySelectorAll(".card").forEach(c => c.setAttribute("aria-current", c.dataset.key === key));
+  const f = DATA.forms.find(x => x.key === key);
+  $("#detail").innerHTML = f.error ? `<h2>${esc(f.name)}</h2><p class="stale">${esc(f.error)}</p>` : detailHTML(f);
+  if (!f.error) drawDaily(f);
+}
+
+function tile(label, value, note = "", small = false) {
+  return `<div class="card tile"><div class="label">${label}</div><div class="value${small ? " small" : ""}">${value}</div><div class="note">${note}</div></div>`;
+}
+function flagTile(label, n, total, color, note) {
+  const sev = n === 0 ? "var(--good)" : color;
+  const pct = total ? ` (${(100 * n / total).toFixed(1)}%)` : "";
+  return `<div class="card tile"><div class="label flag"><span class="dot" style="background:${sev}"></span>${label}</div>
+    <div class="value">${num(n)}<span class="meta">${pct}</span></div><div class="note">${note}</div></div>`;
+}
+function table(headers, rows, empty = "Nothing to show") {
+  if (!rows.length) return `<p class="empty">${empty}</p>`;
+  return `<table><thead><tr>${headers.map(h => `<th class="${h.num ? "num" : ""}">${h.t}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${headers[i].num ? "num" : ""}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+function detailHTML(f) {
+  const t = f.totals, q = f.quality, d = f.duration_minutes, n = t.submissions;
+  const groups = Object.entries(f.by_group).map(([g, rows]) => `<div class="card"><h3>By ${esc(g)} <span class="meta">(${esc(f.group_fields_found[g])})</span></h3>
+      <div class="scroll">${table([{t:"Value"},{t:"Submissions",num:true}], rows.map(r => [esc(r.value), num(r.n)]))}</div></div>`).join("");
+  const missing = f.group_fields_missing.length
+    ? `<p class="meta">Not found in this form (edit <code>config/forms.yml</code>): ${f.group_fields_missing.map(esc).join(", ")}</p>` : "";
+  const dupRows = q.duplicates.groups.map(g => [esc(Object.values(g.key).join(" / ")), num(g.n), g.ids.join(", ")]);
+  return `
+    <h2>${esc(f.name)} <span class="meta">Kobo: ${esc(f.kobo_name || "")} · ${f.deployment_active ? "deployed" : "<span class='stale'>not deployed</span>"}</span></h2>
+    <div class="tiles">
+      ${tile("Submissions", num(n), t.kobo_reported_count !== null && t.kobo_reported_count !== n ? `Kobo reports ${num(t.kobo_reported_count)}` : "all time")}
+      ${t.target ? tile("Of target", `${t.pct_of_target}%`, `${num(t.target)} expected`) : ""}
+      ${tile("Last 24 h", num(t.last_24h), "")}
+      ${tile("Last 7 days", num(t.last_7d), "")}
+      ${tile("Median duration", d.median_min !== undefined ? `${d.median_min} min` : "—", d.n ? `p10 ${d.p10_min} · p90 ${d.p90_min}` : "no start/end times")}
+      ${tile("First / last", `${fmtDT(t.first_submission)}<br>→ ${fmtDT(t.last_submission)}`, "", true)}
+    </div>
+
+    <h3>Submissions per day (EAT)</h3>
+    <div class="card chart-wrap" id="daily"><div class="tip" id="tip"></div></div>
+
+    <h3>Data quality</h3>
+    <div class="tiles">
+      ${flagTile("Duplicates", q.duplicates.n, n, "var(--critical)", f.dedupe_fields.length ? `extra records sharing ${f.dedupe_fields.join(" + ")}` : "no dedupe key found")}
+      ${flagTile("Too fast", q.too_fast.n, n, "var(--serious)", `under ${q.too_fast.threshold_min} min`)}
+      ${flagTile("Left open", q.too_slow.n, n, "var(--warning)", `over ${q.too_slow.threshold_min} min`)}
+      ${flagTile("Outside hours", q.out_of_hours.n, n, "var(--warning)", `started outside ${q.out_of_hours.hours[0]}:00–${q.out_of_hours.hours[1]}:00`)}
+      ${flagTile("No GPS", q.missing_gps.n, n, "var(--warning)", "no geolocation captured")}
+      ${tile("Validation", Object.entries(f.validation).map(([k, v]) => `${esc(k)}: ${num(v)}`).join("<br>") || "—", "Kobo validation status", true)}
+    </div>
+    ${dupRows.length ? `<div class="card" style="margin-top:12px"><h3>Duplicate groups</h3><div class="scroll">${table([{t:"Key"},{t:"Records",num:true},{t:"Kobo _id"}], dupRows)}</div></div>` : ""}
+
+    <div class="two" style="margin-top:12px">
+      <div class="card"><h3>By enumerator</h3>
+        ${table([{t:"User"},{t:"Submissions",num:true},{t:"Median min",num:true},{t:"Last"}],
+          f.by_enumerator.map(e => [esc(e.user), num(e.n), e.median_min ?? "—", fmtDT(e.last_submission)]))}</div>
+      <div class="card"><h3>Least-complete questions</h3>
+        ${table([{t:"Question"},{t:"Type"},{t:"% answered",num:true}],
+          f.completeness_lowest.map(c => [`<b>${esc(c.name)}</b><br><span class="meta">${esc(c.label)}</span>`, esc(c.type), c.pct]))}</div>
+    </div>
+    ${groups ? `<div class="two" style="margin-top:12px">${groups}</div>` : ""}
+    ${missing}
+
+    <details style="margin-top:16px"><summary>Questions in this form (${f.schema.length})</summary>
+      <div class="card" style="margin-top:8px">${table([{t:"Name"},{t:"Type"},{t:"Label"},{t:"xpath"}],
+        f.schema.map(s => [esc(s.name), esc(s.type), esc(s.label), `<code>${esc(s.xpath)}</code>`]))}</div></details>`;
+}
+
+function drawDaily(f) {
+  const wrap = $("#daily"), tip = $("#tip");
+  const rows = f.by_day, W = Math.max(600, wrap.clientWidth - 32), H = 180, padL = 36, padB = 24, padT = 10;
+  const max = Math.max(1, ...rows.map(r => r.n));
+  const bw = (W - padL) / rows.length, innerH = H - padB - padT;
+  const y = v => padT + innerH - (v / max) * innerH;
+  const ticks = [0, Math.ceil(max / 2), max];
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Submissions per day">`;
+  ticks.forEach(tv => { svg += `<line x1="${padL}" x2="${W}" y1="${y(tv)}" y2="${y(tv)}" stroke="var(--grid)"/><text x="${padL - 6}" y="${y(tv) + 4}" text-anchor="end">${tv}</text>`; });
+  rows.forEach((r, i) => {
+    const x = padL + i * bw + 1, w = Math.max(1, bw - 2), h = Math.max(0, y(0) - y(r.n));
+    svg += `<rect x="${x}" y="${y(r.n)}" width="${w}" height="${h}" rx="${Math.min(4, w / 2)}" fill="var(--series-1)" data-i="${i}"/>`;
+    svg += `<rect x="${x - 1}" y="${padT}" width="${w + 2}" height="${innerH}" fill="transparent" data-i="${i}"/>`; // hit target
+    if (i % Math.ceil(rows.length / 10) === 0) svg += `<text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${fmtD(r.date)}</text>`;
+  });
+  svg += `<line x1="${padL}" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--axis)"/></svg>`;
+  wrap.insertAdjacentHTML("beforeend", svg);
+  wrap.onmousemove = e => {
+    const i = e.target.dataset.i; if (i === undefined) { tip.style.display = "none"; return; }
+    const r = rows[+i]; tip.style.display = "block";
+    tip.textContent = `${fmtD(r.date)}: ${r.n} submission${r.n === 1 ? "" : "s"}`;
+    const b = wrap.getBoundingClientRect();
+    tip.style.left = Math.min(e.clientX - b.left + 12, b.width - tip.offsetWidth - 8) + "px";
+    tip.style.top = (e.clientY - b.top - 32) + "px";
+  };
+  wrap.onmouseleave = () => tip.style.display = "none";
+}
+
+load().catch(e => { $("#freshness").textContent = "Could not load summary.json: " + e; });
+</script>
+</body>
+</html>

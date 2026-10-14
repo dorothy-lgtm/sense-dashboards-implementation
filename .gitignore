@@ -1,0 +1,8 @@
+# Row-level data — never committed (contains contact details)
+raw/
+exports/
+
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

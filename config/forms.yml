@@ -1,0 +1,53 @@
+# SENSE study — KoboToolbox forms feeding the dashboards.
+#
+# `key`        short slug used for file names and dashboard tabs
+# `uid`        Kobo asset UID (from the form URL or the Project > Settings page)
+# `group_by`   question names to break submissions down by (matched case-insensitively
+#              against the last segment of each question's xpath, so "district" matches
+#              "section_a/district"). Missing names are reported, not fatal.
+# `dedupe_key` question names that together should be unique per submission; repeats
+#              are flagged as duplicates on the data-quality panel.
+# `target`     expected total submissions, for progress tiles (optional)
+# `export_setting_uid`  which saved export (Kobo > Data > Downloads) to fetch as the team's
+#              XLSX/CSV copy; defaults to the first one on the form (optional)
+
+kobo:
+  base_url: https://kf.kobotoolbox.org
+  page_size: 5000          # rows per API page; Kobo accepts up to 30000
+  lookback_days: 60        # window for the per-day chart; all-time totals are always computed
+
+forms:
+  - key: enrolment
+    name: "Annex F — School Enrolment CRF (Form A)"
+    uid: ak95trCoSBkM3aKqZysbdB
+    group_by: [district, sub_region, subregion, school_name, school]
+    dedupe_key: [school_id, school_code]
+    target: 165
+
+  - key: structure_vector
+    name: "Annex G — Structure, Prevention & Vector (Form B)"
+    uid: axDMBKEfMJYtZ5LiHqCMbb
+    group_by: [district, school_name, school]
+    dedupe_key: [school_id, school_code]
+    target: 165
+
+  - key: retrospective
+    name: "Annex H — Retrospective Data"
+    uid: aokEegtT2X8oyCDfQCWeZR
+    export_setting_uid: es8TZRSGhSxbUaaNJr5rWoq
+    group_by: [district, school_name, school]
+    dedupe_key: [school_id, school_code]
+    target: 165
+
+  - key: school_assessment
+    name: "School Assessment"
+    uid: ajj7kZq2be5XDFSio3zJHu
+    group_by: [district, school_name, school]
+    dedupe_key: [school_id, school_code]
+    target: 165
+
+# Data-quality thresholds
+quality:
+  min_duration_minutes: 5      # submissions faster than this are flagged
+  max_duration_minutes: 240    # slower than this (left open) are flagged
+  working_hours: [6, 20]       # local-time start hour, end hour; outside = flagged

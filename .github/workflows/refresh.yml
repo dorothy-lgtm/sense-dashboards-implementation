@@ -1,0 +1,84 @@
+name: Refresh SENSE dashboards
+
+on:
+  schedule:
+    - cron: "17 */2 * * *"      # every 2 hours (UTC); edit freely
+  workflow_dispatch:            # "Run workflow" button in the Actions tab
+  push:
+    paths:
+      - "site/**"
+      - "scripts/**"
+      - "config/**"
+      - ".github/workflows/refresh.yml"
+
+# Only one refresh at a time; a new one cancels an older queued one
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: write     # commit site/data/summary.json back to the repo
+  pages: write        # publish to GitHub Pages
+  id-token: write     # required by deploy-pages
+
+jobs:
+  pull-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Pull from KoboToolbox
+        env:
+          KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
+        run: python scripts/kobo_pull.py
+
+      - name: Build aggregate summary
+        run: python scripts/summarize.py
+
+      - name: Commit refreshed summary
+        run: |
+          git config user.name "sense-dashboards[bot]"
+          git config user.email "sense-dashboards@users.noreply.github.com"
+          git add site/data/summary.json
+          if git diff --cached --quiet; then
+            echo "No change in summary"
+          else
+            git commit -m "Refresh summary $(date -u +'%Y-%m-%d %H:%MZ')"
+            git push
+          fi
+
+      # Team exports (raw Kobo XLSX/CSV, incl. contact fields). Never committed to git and
+      # never attached as a run artifact (the repo is public). Pushed to the team's Box
+      # folder when the BOX_* secrets are set; skipped otherwise.
+      - name: Upload exports to Box
+        env:
+          BOX_CLIENT_ID: ${{ secrets.BOX_CLIENT_ID }}
+          BOX_CLIENT_SECRET: ${{ secrets.BOX_CLIENT_SECRET }}
+          BOX_SUBJECT_TYPE: ${{ vars.BOX_SUBJECT_TYPE }}
+          BOX_SUBJECT_ID: ${{ vars.BOX_SUBJECT_ID }}
+          BOX_FOLDER_ID: ${{ vars.BOX_FOLDER_ID }}
+          BOX_SUBFOLDER_BY_DATE: ${{ vars.BOX_SUBFOLDER_BY_DATE }}
+        run: python scripts/box_upload.py
+
+      - name: Package site for Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: pull-and-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
