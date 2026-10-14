@@ -25,7 +25,9 @@ GitHub Pages  ←  site/index.html + site/data/summary.json
 | `scripts/kobo_pull.py` | Pulls form definitions + all submissions (paginated), downloads Kobo's saved export, writes flattened CSVs |
 | `scripts/summarize.py` | Aggregates → `site/data/summary.json`. No row-level values, names or phone numbers |
 | `site/index.html` | The dashboard. Plain HTML/JS, no build step, reads `data/summary.json` |
-| `.github/workflows/refresh.yml` | Schedule + Pages deploy |
+| `.github/workflows/refresh.yml` | 2-hourly refresh + Pages deploy |
+| `.github/workflows/daily-digest.yml` | Daily export email (see below) |
+| `scripts/send_digest.py` / `config/digest.yml` / `state/digest.json` | The email, its settings, and its pause state |
 | `tests/mock_kobo.py` | Fake Kobo API for testing offline |
 
 ## One-time setup (≈10 minutes)
@@ -42,7 +44,36 @@ GitHub Pages  ←  site/index.html + site/data/summary.json
 - **The exports** (`exports/`, incl. Kobo's XLSX with contact fields) exist only inside the workflow run and are deleted with it. They are never committed and never attached as a run artifact (run artifacts on a public repo are downloadable). Once Box is configured they are copied into a Box folder every run — see below.
 - **The token** grants full access to the Kobo account. Because it was shared over chat during setup, regenerate it in Kobo once it is stored as the GitHub secret, and update the secret.
 
-## Sending the exports to Box (optional, ≈15 minutes, needs the Box admin once)
+## Daily export email (nurse / head-teacher contacts to the team)
+
+`.github/workflows/daily-digest.yml` runs at 05:45 Kampala time. It pulls Kobo, zips the
+exports (`config/digest.yml` → `attach`), and emails them to the addresses in
+`config/digest.yml` → `to`. The body carries the headline numbers: recruited schools (distinct
+schools with an Annex H record) vs the 165 target, schools with an assessment form, and the lag.
+
+- **Stop rule.** It sends daily while recruited < `recruitment_target`. The day the target is
+  reached it sends a final email saying so and sets `"paused": true` in `state/digest.json`.
+  To resume, edit that file on GitHub (set `paused` to `false`), or run the workflow by hand
+  (Actions → Daily export email → Run workflow) with **force** ticked.
+- **Dry run.** Run the workflow by hand with **dry_run** ticked to see the email in the log
+  without sending.
+- **Into Box without any Box app.** A Box folder can accept uploads by email: open the folder
+  → ⚙ (folder settings) → *Email uploads* → copy the `upload.…@u.box.com` address and add it
+  to `to:` in `config/digest.yml`. The attachments then land in that folder every morning.
+
+### Secrets and variables for the email
+
+| Where | Name | Value |
+|---|---|---|
+| Secret | `SMTP_USER` | the sending mailbox, e.g. `sense-reports@pilgrimafrica.org` |
+| Secret | `SMTP_PASSWORD` | for Google Workspace: an **App Password** for that mailbox (Google Account → Security → 2-Step Verification on → App passwords), not the normal password |
+| Secret | `EXPORT_ZIP_PASSWORD` | optional. If set, the zip is AES-256 encrypted with it; share the password with the team out of band. Leave unset for a plain zip |
+| Variable | `SMTP_HOST` / `SMTP_PORT` | optional; defaults `smtp.gmail.com` / `465`. For Microsoft 365 use `smtp.office365.com` / `587` |
+| Variable | `SMTP_FROM` | optional display sender; defaults to `SMTP_USER` |
+
+Gmail limits attachments to 25 MB per message; four forms of a few hundred rows are well under 1 MB.
+
+## Sending the exports to Box via the API (optional alternative, needs the Box admin once)
 
 Box has no scheduler and cannot run the pull itself, but it is a good home for the team's
 copy of the data. Each run overwrites `<form>.kobo.xlsx`, `<form>.csv` etc. in one Box folder

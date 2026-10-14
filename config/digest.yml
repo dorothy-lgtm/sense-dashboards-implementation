@@ -1,0 +1,30 @@
+# Daily export email ("digest").
+#
+# Sent by .github/workflows/daily-digest.yml. The sending mailbox comes from GitHub
+# secrets (SMTP_USER / SMTP_PASSWORD) — never put credentials in this file.
+
+enabled: true
+
+to:
+  - info@pilgrimafrica.org
+  # Add the SENSE Box folder's "Email uploads" address here and the attachments land in
+  # Box automatically (Box folder → ⚙ → Email uploads):
+  # - upload.XXXXXXXX@u.box.com
+cc: []
+
+subject_prefix: "[SENSE daily export]"
+
+# Which exports to attach (glob patterns under exports/). Kobo's own labelled XLSX per form
+# plus the flattened CSVs (incl. repeat-group files).
+attach:
+  - "*.kobo.xlsx"
+  - "*.csv"
+
+# Stop rule: send daily while recruited schools < recruitment_target. On the day the
+# target is reached, send one final email saying so and pause. To resume, set
+# "paused": false in state/digest.json (edit it on GitHub) or run the workflow by hand
+# with force=true.
+recruitment_form: retrospective        # recruited school = has an Annex H record
+recruitment_target: 165
+assessment_form: school_assessment     # the lagging form to watch
+stop_at_target: true

@@ -177,12 +177,14 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
 
     dedupe_qs = [q for q in (find_field(schema, k) for k in form.get("dedupe_key", [])) if q]
     duplicates = []
+    distinct_units = None
     if dedupe_qs:
         groups = defaultdict(list)
         for s in subs:
-            kv = tuple(str(value_of(s, q)) for q in dedupe_qs)
+            kv = tuple(str(value_of(s, q)).strip() for q in dedupe_qs)
             if all(x not in ("None", "") for x in kv):
                 groups[kv].append(s.get("_id"))
+        distinct_units = len(groups)   # e.g. distinct schools with a record in this form
         for kv, ids in groups.items():
             if len(ids) > 1:
                 duplicates.append({"key": dict(zip([q["name"] for q in dedupe_qs], kv)), "n": len(ids), "ids": ids})
@@ -210,9 +212,10 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
         "deployment_active": meta.get("deployment_active"),
         "totals": {
             "submissions": n,
+            "distinct_units": distinct_units,
             "kobo_reported_count": meta.get("deployment_submission_count"),
             "target": target,
-            "pct_of_target": round(100 * n / target, 1) if target else None,
+            "pct_of_target": round(100 * (distinct_units if distinct_units is not None else n) / target, 1) if target else None,
             "last_24h": last_24h,
             "last_7d": last_7d,
             "first_submission": first.isoformat() if first else None,

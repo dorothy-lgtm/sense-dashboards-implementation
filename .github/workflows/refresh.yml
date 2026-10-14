@@ -52,6 +52,7 @@ jobs:
             echo "No change in summary"
           else
             git commit -m "Refresh summary $(date -u +'%Y-%m-%d %H:%MZ')"
+            git pull --rebase origin main
             git push
           fi
 
