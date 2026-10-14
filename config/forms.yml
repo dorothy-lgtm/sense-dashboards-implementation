@@ -20,34 +20,35 @@ forms:
   - key: enrolment
     name: "Annex F — School Enrolment CRF (Form A)"
     uid: ak95trCoSBkM3aKqZysbdB
-    group_by: [district, sub_region, subregion, school_name, school]
-    dedupe_key: [school_id, school_code]
+    group_by: [district, region, school_name]
+    dedupe_key: [school_code]
     target: 165
 
   - key: structure_vector
     name: "Annex G — Structure, Prevention & Vector (Form B)"
     uid: axDMBKEfMJYtZ5LiHqCMbb
-    group_by: [district, school_name, school]
-    dedupe_key: [school_id, school_code]
+    group_by: [district, region, school_name]
+    dedupe_key: [school_code]
     target: 165
 
   - key: retrospective
     name: "Annex H — Retrospective Data"
     uid: aokEegtT2X8oyCDfQCWeZR
     export_setting_uid: es8TZRSGhSxbUaaNJr5rWoq
-    group_by: [district, school_name, school]
-    dedupe_key: [school_id, school_code]
+    group_by: [district, region, school_name]
+    dedupe_key: [school_code]
     target: 165
 
   - key: school_assessment
-    name: "School Assessment"
+    name: "School Assessment Checklist"
     uid: ajj7kZq2be5XDFSio3zJHu
-    group_by: [district, school_name, school]
-    dedupe_key: [school_id, school_code]
+    group_by: [district, school_name]
+    dedupe_key: []               # this form has no school code — joined by name in roster.py
     target: 165
+    quality: { min_duration_minutes: 1 }
 
 # Data-quality thresholds
 quality:
-  min_duration_minutes: 5      # submissions faster than this are flagged
-  max_duration_minutes: 240    # slower than this (left open) are flagged
-  working_hours: [6, 20]       # local-time start hour, end hour; outside = flagged
+  min_duration_minutes: 3      # submissions faster than this are flagged
+  max_duration_minutes: 600    # slower than this (left open across a visit) are flagged
+  working_hours: [6, 21]       # local-time start hour, end hour; outside = flagged

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Tiny fake of the KoboToolbox v2 API, for testing the pipeline without network access.
+"""Fake KoboToolbox v2 API for testing offline. Mirrors the real SENSE form structures:
+Annex F (screening + school_code), G, H (school_code) and the School Assessment form
+(school_name only, no code), with the data quirks seen in the field (blank districts,
+a region typed as a district, name spelling variants).
 
     python tests/mock_kobo.py 8765 &
     KOBO_TOKEN=test KOBO_BASE_URL=http://127.0.0.1:8765 python scripts/kobo_pull.py
-    python scripts/summarize.py
-
-Serves /api/v2/assets/<uid>/, /data/ (paginated), /export-settings/ and a dummy export file.
+    python scripts/summarize.py && python scripts/roster.py
 """
 import json
 import random
@@ -14,111 +15,201 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
-random.seed(7)
+random.seed(11)
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
-UIDS = {"ak95trCoSBkM3aKqZysbdB": 180, "axDMBKEfMJYtZ5LiHqCMbb": 120,
-        "aokEegtT2X8oyCDfQCWeZR": 60, "ajj7kZq2be5XDFSio3zJHu": 0}
-DISTRICTS = ["Soroti", "Kumi", "Serere", "Ngora", "Katakwi", "Amuria", "Lira", "Apac"]
-USERS = ["de_team01", "de_team02", "de_team03", "de_team04", "de_team05"]
+UIDS = {"F": "ak95trCoSBkM3aKqZysbdB", "G": "axDMBKEfMJYtZ5LiHqCMbb", "H": "aokEegtT2X8oyCDfQCWeZR", "A": "ajj7kZq2be5XDFSio3zJHu"}
+DISTRICTS = {"LUWERO": "BUGANDA", "NAKASEKE": "BUGANDA", "HOIMA": "BUNYORO", "KAGADI": "BUNYORO", "KIBAALE": "BUNYORO",
+             "KAKUMIRO": "BUNYORO", "KIKUUBE": "BUNYORO", "MASINDI": "BUNYORO", "KIRYANDONGO": "BUNYORO",
+             "BULIISA": "BUNYORO", "BUKEDEA": "TESO", "GULU CITY": "ACHOLI", "KARENGA": "KARAMOJA"}
+OFFICERS = ["TE", "BA", "JK", "RN", "PO"]
+EAT = timezone(timedelta(hours=3))
 
-SURVEY = [
-    {"type": "start", "name": "start", "$xpath": "start"},
-    {"type": "end", "name": "end", "$xpath": "end"},
-    {"type": "begin_group", "name": "ident", "$xpath": "ident", "label": ["Identification"]},
-    {"type": "select_one", "name": "district", "$xpath": "ident/district", "label": ["District"], "select_from_list_name": "districts"},
-    {"type": "text", "name": "school_name", "$xpath": "ident/school_name", "label": ["School name"]},
-    {"type": "text", "name": "school_id", "$xpath": "ident/school_id", "label": ["School ID"]},
-    {"type": "end_group", "name": "ident"},
-    {"type": "integer", "name": "n_boarders", "$xpath": "n_boarders", "label": ["Number of boarders"]},
-    {"type": "text", "name": "nurse_phone", "$xpath": "nurse_phone", "label": ["Nurse phone"]},
-    {"type": "begin_repeat", "name": "contacts", "$xpath": "contacts", "label": ["Contacts"]},
-    {"type": "text", "name": "contact_name", "$xpath": "contacts/contact_name", "label": ["Contact name"]},
-    {"type": "end_repeat", "name": "contacts"},
-    {"type": "geopoint", "name": "gps", "$xpath": "gps", "label": ["GPS"]},
-]
-CHOICES = [{"list_name": "districts", "name": d.lower(), "label": [d]} for d in DISTRICTS]
+# 90 schools with codes; names with realistic variants
+SCHOOLS = []
+for i in range(1, 91):
+    d = random.choice(list(DISTRICTS))
+    base = random.choice(["ST. MARY'S", "ST. JOSEPH'S", "KINGS", "BISHOP", "TRINITY", "HOLY CROSS", "VICTORIA", "SACRED HEART", "ST. PETER'S"]) + f" {random.choice(['SS', 'S.S.', 'SECONDARY SCHOOL', 'COLLEGE', 'HIGH SCHOOL'])} {d.title()}{'' if i % 7 else ' Annex'} {i}"
+    SCHOOLS.append({"code": f"SCH{i:03d}", "name": base, "district": d, "region": DISTRICTS[d]})
 
 
-def make_subs(uid: str, n: int) -> list[dict]:
-    subs = []
-    base = datetime(2026, 9, 22, tzinfo=timezone.utc)
-    for i in range(n):
-        day = base + timedelta(days=random.randint(0, 22))
-        st = day.replace(hour=random.choice([5, 8, 9, 10, 11, 14, 15, 21]), minute=random.randint(0, 59))
-        dur = random.choice([2, 12, 25, 31, 40, 55, 300])
-        en = st + timedelta(minutes=dur)
-        sid = 1000 + i
-        school_id = f"S{random.randint(1, 160):03d}" if random.random() > 0.03 else "S042"  # some dupes
-        subs.append({
-            "_id": sid, "_uuid": f"uuid-{uid[:4]}-{i}",
-            "_submission_time": (en + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S"),
-            "_submitted_by": random.choice(USERS), "_status": "submitted_via_web",
-            "_validation_status": random.choice([{}, {}, {"label": "Approved", "uid": "validation_status_approved"}]),
-            "start": st.astimezone(timezone(timedelta(hours=3))).isoformat(timespec="milliseconds"),
-            "end": en.astimezone(timezone(timedelta(hours=3))).isoformat(timespec="milliseconds"),
-            "ident/district": random.choice(DISTRICTS).lower(),
-            "ident/school_name": f"School {school_id}",
-            "ident/school_id": school_id,
-            "n_boarders": random.randint(80, 900) if random.random() > 0.15 else None,
-            "nurse_phone": f"07{random.randint(10000000, 99999999)}",
-            "contacts": [{"contacts/contact_name": f"Person {j}"} for j in range(random.randint(0, 3))],
-            "gps": "1.71 33.61 1100 5" if random.random() > 0.1 else None,
-            "_geolocation": [1.71, 33.61] if random.random() > 0.1 else [None, None],
-            "_attachments": [], "_tags": [], "_notes": [],
-        })
-    subs.sort(key=lambda s: s["_id"])
-    return subs
+def variant(name: str) -> str:
+    """How the same school gets typed into the assessment form."""
+    v = name
+    r = random.random()
+    if r < 0.4:
+        v = v.replace("SECONDARY SCHOOL", "S.S").replace("S.S.", "SS").replace("HIGH SCHOOL", "H/S")
+    elif r < 0.6:
+        v = v.lower().replace("st. ", "st ").title()
+    elif r < 0.7:
+        v = v.replace("'", "")
+    return v
 
 
-DATA = {uid: make_subs(uid, n) for uid, n in UIDS.items()}
+def ts(d: datetime) -> str:
+    return d.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def when(i: int) -> datetime:
+    return datetime(2026, 9, 23, tzinfo=timezone.utc) + timedelta(days=min(21, i // 4), hours=random.randint(6, 15))
+
+
+def choices_schools():
+    return [{"list_name": "schools", "name": s["code"], "label": [f"{s['code']}"]} for s in SCHOOLS]
+
+
+SURVEYS = {
+    "F": [
+        {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+        {"type": "select_one", "name": "atleast_300_boarders", "$xpath": "School_screening_grp/atleast_300_boarders", "label": ["≥300 boarders"], "select_from_list_name": "yn"},
+        {"type": "calculate", "name": "overall_status", "$xpath": "School_screening_grp/overall_status"},
+        {"type": "select_one", "name": "school_code", "$xpath": "School_Identification_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
+        {"type": "text", "name": "school_name", "$xpath": "School_Identification_grp/school_name", "label": ["Name of the school"]},
+        {"type": "text", "name": "district", "$xpath": "School_Identification_grp/district", "label": ["District"]},
+        {"type": "text", "name": "region", "$xpath": "School_Identification_grp/region", "label": ["Region"]},
+        {"type": "date", "name": "enrollment_date", "$xpath": "School_Identification_grp/enrollment_date", "label": ["Date of enrolment visit"]},
+        {"type": "geopoint", "name": "geo_location", "$xpath": "School_Identification_grp/geo_location", "label": ["GPS"]},
+        {"type": "text", "name": "nurse_name", "$xpath": "school_health_personnel_grp/nurse_name", "label": ["Nurse"]},
+        {"type": "text", "name": "nurse_contact", "$xpath": "school_health_personnel_grp/nurse_contact", "label": ["Nurse phone"]},
+        {"type": "select_one", "name": "data_officer", "$xpath": "Respondent_signature_grp/data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
+    ],
+    "G": [
+        {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+        {"type": "select_one", "name": "school_code", "$xpath": "School_Identification_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
+        {"type": "text", "name": "school_name", "$xpath": "School_Identification_grp/school_name", "label": ["Name"]},
+        {"type": "text", "name": "district", "$xpath": "School_Identification_grp/district", "label": ["District"]},
+        {"type": "text", "name": "region", "$xpath": "School_Identification_grp/region", "label": ["Region"]},
+        {"type": "integer", "name": "total_dormitories", "$xpath": "physical_infrastructure_grp/total_dormitories", "label": ["Dorms"]},
+        {"type": "select_one", "name": "data_officer", "$xpath": "Respondent_signature_grp/data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
+    ],
+    "H": [
+        {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+        {"type": "select_one", "name": "school_code", "$xpath": "School_location_info_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
+        {"type": "text", "name": "school_name", "$xpath": "School_location_info_grp/school_name", "label": ["Name"]},
+        {"type": "text", "name": "district", "$xpath": "School_location_info_grp/district", "label": ["District"]},
+        {"type": "text", "name": "region", "$xpath": "School_location_info_grp/region", "label": ["Region"]},
+        {"type": "text", "name": "head_master", "$xpath": "School_location_info_grp/head_master", "label": ["Head teacher"]},
+        {"type": "text", "name": "hm_contact", "$xpath": "School_location_info_grp/hm_contact", "label": ["HT contact"]},
+        {"type": "date", "name": "completion_date", "$xpath": "School_location_info_grp/completion_date", "label": ["Completion date"]},
+        {"type": "select_one", "name": "year", "$xpath": "Enrollment_data_grp/year", "label": ["Year"], "select_from_list_name": "years"},
+        {"type": "select_one", "name": "term", "$xpath": "Enrollment_data_grp/term", "label": ["Term"], "select_from_list_name": "terms"},
+        {"type": "integer", "name": "total_malaria_cases", "$xpath": "Enrollment_data_grp/total_malaria_cases", "label": ["Cases"]},
+        {"type": "select_one", "name": "data_officer", "$xpath": "data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
+    ],
+    "A": [
+        {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+        {"type": "select_one", "name": "region", "$xpath": "School_assessment_grp/region", "label": ["Region"], "select_from_list_name": "regions"},
+        {"type": "select_one", "name": "district", "$xpath": "School_assessment_grp/district", "label": ["District"], "select_from_list_name": "districts"},
+        {"type": "text", "name": "school_name", "$xpath": "School_assessment_grp/school_name", "label": ["School Name"]},
+        {"type": "date", "name": "visit_date", "$xpath": "School_assessment_grp/visit_date", "label": ["Visit date"]},
+        {"type": "select_one", "name": "springfiles_received", "$xpath": "School_assessment_grp/springfiles_received", "label": ["Spring file"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "consent_signed", "$xpath": "School_assessment_grp/consent_signed", "label": ["Consent"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "training_conducted", "$xpath": "School_assessment_grp/training_conducted", "label": ["Training"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "retros_data_collected", "$xpath": "School_assessment_grp/retros_data_collected", "label": ["Retro data"], "select_from_list_name": "yn"},
+        {"type": "select_one", "name": "data_officer", "$xpath": "School_assessment_grp/data_officer", "label": ["Data officer"], "select_from_list_name": "officers"},
+    ],
+}
+CHOICES = (choices_schools()
+           + [{"list_name": "yn", "name": "yes", "label": ["Yes"]}, {"list_name": "yn", "name": "no", "label": ["No"]}]
+           + [{"list_name": "officers", "name": o.lower(), "label": [o]} for o in OFFICERS]
+           + [{"list_name": "years", "name": "2026", "label": ["2026"]}, {"list_name": "terms", "name": "t1", "label": ["Term 1"]}, {"list_name": "terms", "name": "t2", "label": ["Term 2"]}]
+           + [{"list_name": "districts", "name": d.lower().replace(" ", "_"), "label": [d]} for d in DISTRICTS]
+           + [{"list_name": "regions", "name": r.lower(), "label": [r]} for r in set(DISTRICTS.values())])
+
+
+def build():
+    data = {k: [] for k in UIDS}
+    sid = 1000
+    recruited = SCHOOLS[:74]
+    # F: 74 recruited + 14 screened-out (no code)
+    for i, s in enumerate(recruited + [None] * 14):
+        t = when(i); sid += 1
+        rec = {"_id": sid, "_uuid": f"f-{sid}", "_submission_time": ts(t + timedelta(hours=5)), "_submitted_by": "pa_sense",
+               "start": (t).astimezone(EAT).isoformat(timespec="milliseconds"), "end": (t + timedelta(hours=random.choice([1, 5, 9]))).astimezone(EAT).isoformat(timespec="milliseconds"),
+               "School_screening_grp/atleast_300_boarders": "yes" if s else "no",
+               "School_screening_grp/overall_status": "ELIGIBLE" if s else "NOT ELIGIBLE",
+               "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [1.7, 32.3] if s and random.random() > 0.2 else [None, None]}
+        if s:
+            rec.update({"School_Identification_grp/school_code": s["code"], "School_Identification_grp/school_name": s["name"],
+                        "School_Identification_grp/district": s["district"] if random.random() > 0.25 else "",   # blanks
+                        "School_Identification_grp/region": s["region"], "School_Identification_grp/enrollment_date": t.date().isoformat(),
+                        "school_health_personnel_grp/nurse_name": "Nurse X", "school_health_personnel_grp/nurse_contact": f"07{random.randint(10000000, 99999999)}"})
+        data["F"].append(rec)
+    # G: 74 schools, 10 with a second submission
+    for i, s in enumerate(recruited + random.sample(recruited, 10)):
+        t = when(i); sid += 1
+        data["G"].append({"_id": sid, "_uuid": f"g-{sid}", "_submission_time": ts(t + timedelta(hours=5)), "_submitted_by": "pa_sense",
+                          "start": t.astimezone(EAT).isoformat(timespec="milliseconds"), "end": (t + timedelta(hours=6)).astimezone(EAT).isoformat(timespec="milliseconds"),
+                          "School_Identification_grp/school_code": s["code"], "School_Identification_grp/school_name": s["name"],
+                          "School_Identification_grp/district": s["district"], "School_Identification_grp/region": s["region"],
+                          "physical_infrastructure_grp/total_dormitories": random.randint(2, 12),
+                          "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
+    # H: 74 recruited (3 with region typed as district)
+    for i, s in enumerate(recruited):
+        t = when(i); sid += 1
+        data["H"].append({"_id": sid, "_uuid": f"h-{sid}", "_submission_time": ts(t + timedelta(hours=5)), "_submitted_by": "pa_sense",
+                          "start": t.astimezone(EAT).isoformat(timespec="milliseconds"), "end": (t + timedelta(minutes=random.choice([3, 40, 400]))).astimezone(EAT).isoformat(timespec="milliseconds"),
+                          "School_location_info_grp/school_code": s["code"], "School_location_info_grp/school_name": s["name"],
+                          "School_location_info_grp/district": s["region"] if i % 25 == 0 else s["district"],
+                          "School_location_info_grp/region": s["region"], "School_location_info_grp/head_master": "HT Y",
+                          "School_location_info_grp/hm_contact": f"07{random.randint(10000000, 99999999)}",
+                          "School_location_info_grp/completion_date": t.date().isoformat(),
+                          "Enrollment_data_grp/year": "2026", "Enrollment_data_grp/term": "t1", "Enrollment_data_grp/total_malaria_cases": random.randint(0, 80),
+                          "data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
+    # A: 48 assessments — 44 of recruited schools (name variants), 2 of unrecruited, 2 with blank district
+    pool = random.sample(recruited, 44) + SCHOOLS[80:82]
+    for i, s in enumerate(pool + [recruited[0], recruited[1]]):
+        t = when(i) + timedelta(days=random.randint(1, 12)); sid += 1
+        data["A"].append({"_id": sid, "_uuid": f"a-{sid}", "_submission_time": ts(t + timedelta(hours=3)), "_submitted_by": "pa_sense",
+                          "start": t.astimezone(EAT).isoformat(timespec="milliseconds"), "end": (t + timedelta(minutes=3)).astimezone(EAT).isoformat(timespec="milliseconds"),
+                          "School_assessment_grp/region": s["region"].lower(),
+                          "School_assessment_grp/district": "" if i >= 46 else s["district"].lower().replace(" ", "_"),
+                          "School_assessment_grp/school_name": variant(s["name"]), "School_assessment_grp/visit_date": t.date().isoformat(),
+                          "School_assessment_grp/springfiles_received": "yes", "School_assessment_grp/consent_signed": random.choice(["yes", "no"]),
+                          "School_assessment_grp/training_conducted": random.choice(["yes", "no"]), "School_assessment_grp/retros_data_collected": "yes",
+                          "School_assessment_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
+    for k in data:
+        data[k].sort(key=lambda s: s["_id"])
+    return data
+
+
+DATA = build()
+BY_UID = {uid: k for k, uid in UIDS.items()}
 
 
 class H(BaseHTTPRequestHandler):
-    def log_message(self, *a):  # quiet
+    def log_message(self, *a):
         pass
 
     def send_json(self, obj, code=200):
         body = json.dumps(obj).encode()
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        self.send_response(code); self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
 
     def do_GET(self):
         if self.headers.get("Authorization") != "Token test":
             return self.send_json({"detail": "Invalid token."}, 401)
-        u = urlparse(self.path)
-        qs = parse_qs(u.query)
+        u = urlparse(self.path); qs = parse_qs(u.query)
         parts = [p for p in u.path.split("/") if p]
-        if len(parts) < 4 or parts[:3] != ["api", "v2", "assets"]:
+        if len(parts) < 4 or parts[:3] != ["api", "v2", "assets"] or parts[3] not in BY_UID:
             return self.send_json({"detail": "not found"}, 404)
-        uid = parts[3]
-        if uid not in DATA:
-            return self.send_json({"detail": "not found"}, 404)
-        rest = parts[4:]
+        uid, k, rest = parts[3], BY_UID[parts[3]], parts[4:]
+        rows = DATA[k]
         if not rest:
-            return self.send_json({"uid": uid, "name": f"Mock form {uid[:6]}", "asset_type": "survey",
-                                   "deployment__active": True, "deployment__submission_count": len(DATA[uid]),
-                                   "version_id": "v1", "date_modified": "2026-10-01T00:00:00Z",
-                                   "content": {"survey": SURVEY, "choices": CHOICES}})
+            return self.send_json({"uid": uid, "name": f"SENSE mock form {k}", "deployment__active": True,
+                                   "deployment__submission_count": len(rows), "version_id": "v1", "date_modified": "2026-10-01T00:00:00Z",
+                                   "content": {"survey": SURVEYS[k], "choices": CHOICES}})
         if rest == ["data"]:
             limit = int(qs.get("limit", [100])[0]); start = int(qs.get("start", [0])[0])
-            rows = DATA[uid]
-            nxt = None
-            if start + limit < len(rows):
-                nxt = f"http://127.0.0.1:{PORT}/api/v2/assets/{uid}/data/?format=json&limit={limit}&start={start + limit}"
+            nxt = f"http://127.0.0.1:{PORT}/api/v2/assets/{uid}/data/?format=json&limit={limit}&start={start + limit}" if start + limit < len(rows) else None
             return self.send_json({"count": len(rows), "next": nxt, "previous": None, "results": rows[start:start + limit]})
         if rest == ["export-settings"]:
-            es = "esMOCK123"
-            return self.send_json({"count": 1, "results": [{"uid": es, "name": "Default",
-                "data_url_xlsx": f"http://127.0.0.1:{PORT}/api/v2/assets/{uid}/export-settings/{es}/data.xlsx",
-                "data_url_csv": f"http://127.0.0.1:{PORT}/api/v2/assets/{uid}/export-settings/{es}/data.csv"}]})
+            return self.send_json({"count": 1, "results": [{"uid": "esMOCK", "name": "Default",
+                "data_url_xlsx": f"http://127.0.0.1:{PORT}/api/v2/assets/{uid}/export-settings/esMOCK/data.xlsx",
+                "data_url_csv": f"http://127.0.0.1:{PORT}/api/v2/assets/{uid}/export-settings/esMOCK/data.csv"}]})
         if len(rest) == 3 and rest[0] == "export-settings":
             body = b"PK\x03\x04 mock export " + uid.encode()
             self.send_response(200); self.send_header("Content-Type", "application/octet-stream")
-            self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
-            return
+            self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
         self.send_json({"detail": "not found"}, 404)
 
 

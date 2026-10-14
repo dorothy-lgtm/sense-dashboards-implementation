@@ -76,7 +76,7 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
     meta = json.loads(schema_path.read_text())
     schema: list[dict] = meta["questions"]
     choices: dict = meta.get("choices", {})
-    q_cfg = cfg.get("quality", {})
+    q_cfg = {**cfg.get("quality", {}), **(form.get("quality") or {})}   # per-form overrides
     lookback = int(cfg["kobo"].get("lookback_days", 60))
 
     # --- timestamps -------------------------------------------------------------
@@ -120,8 +120,14 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
 
     # --- enumerators ------------------------------------------------------------
     enum_rows: dict[str, dict] = {}
+    officer_q = find_field(schema, form.get("officer_field", "data_officer"))
+    officer_labels = choices.get(officer_q.get("select_from", ""), {}) if officer_q else {}
     for s, t, st, en in zip(subs, sub_times, starts, ends):
-        user = s.get("_submitted_by") or s.get("username") or "(unknown)"
+        if officer_q:
+            v = value_of(s, officer_q)
+            user = officer_labels.get(str(v), str(v)) if not is_empty(v) else "(no officer recorded)"
+        else:
+            user = s.get("_submitted_by") or s.get("username") or "(unknown)"
         r = enum_rows.setdefault(user, {"user": user, "n": 0, "last": None, "durations": []})
         r["n"] += 1
         if t and (r["last"] is None or t > r["last"]):
@@ -161,6 +167,7 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
     max_dur = float(q_cfg.get("max_duration_minutes", 240))
     wh_start, wh_end = q_cfg.get("working_hours", [6, 20])
     too_fast, too_slow, out_of_hours, missing_gps = [], [], [], []
+    has_gps_q = any(q["type"] in ("geopoint", "geotrace", "geoshape") for q in schema)
     for s, st, en, ls in zip(subs, starts, ends, local_starts):
         sid = s.get("_id")
         if st and en:
@@ -172,7 +179,7 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
         if ls and not (wh_start <= ls.hour < wh_end):
             out_of_hours.append(sid)
         geo = s.get("_geolocation")
-        if not geo or geo[0] is None:
+        if has_gps_q and (not geo or geo[0] is None):
             missing_gps.append(sid)
 
     dedupe_qs = [q for q in (find_field(schema, k) for k in form.get("dedupe_key", [])) if q]
@@ -224,6 +231,7 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
         "by_day": by_day,
         "duration_minutes": dur,
         "by_enumerator": by_enumerator,
+        "enumerator_basis": officer_q["name"] if officer_q else "_submitted_by",
         "by_group": by_group,
         "group_fields_found": group_found,
         "group_fields_missing": group_missing,
@@ -233,7 +241,7 @@ def summarize_form(form: dict, cfg: dict, now: datetime) -> dict:
             "too_fast": {"n": len(too_fast), "ids": too_fast[:200], "threshold_min": min_dur},
             "too_slow": {"n": len(too_slow), "ids": too_slow[:200], "threshold_min": max_dur},
             "out_of_hours": {"n": len(out_of_hours), "ids": out_of_hours[:200], "hours": [wh_start, wh_end]},
-            "missing_gps": {"n": len(missing_gps), "ids": missing_gps[:200]},
+            "missing_gps": {"n": len(missing_gps), "ids": missing_gps[:200], "applicable": has_gps_q},
             "duplicates": {"n": sum(d["n"] - 1 for d in duplicates), "groups": duplicates[:100]},
         },
         "completeness_lowest": completeness[:25],

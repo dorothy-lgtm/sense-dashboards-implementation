@@ -1,0 +1,43 @@
+# School roster: how the four forms are joined into one row per school.
+#
+# recruited school  = has at least one Annex H (retrospective) record
+# assessed school   = has a School Assessment record matched to it
+#
+# Field names are matched on the last segment of the question xpath, case-insensitively.
+
+code_field: school_code            # study code; present in F, G, H — NOT in the assessment form
+name_field: school_name
+district_field: district
+region_field: region
+
+forms:
+  screening:   enrolment           # Annex F: screening + enrolment visit
+  structure:   structure_vector    # Annex G
+  recruitment: retrospective       # Annex H → "recruited"
+  assessment:  school_assessment   # checklist; joined by school name + district
+
+# Annex F eligibility: the calculate field and which of its values mean "eligible".
+# Leave `eligible_values` empty to just show the distribution of values on the dashboard.
+eligibility_field: overall_status
+eligible_values: []
+
+# Assessment checklist items to summarise per school (name → short label)
+assessment_items:
+  springfiles_received: Spring file
+  consent_signed: Consent
+  tools_equip_delivered: Equipment
+  training_conducted: Training
+  enroll_data_collected: Enrolment data
+  ento_data_collected: Ento data
+  retros_data_collected: Retro data
+
+# District name clean-up. Keys are matched after upper-casing and trimming.
+# Values that are regions (not districts) are moved to the region column.
+district_aliases:
+  GULU CITY: GULU CITY
+regions_mistyped_as_district: [BUNYORO, BUGANDA, TESO, ACHOLI, LANGO, KARAMOJA, BUSOGA, BUKEDI, BUGISU, WEST NILE, TOORO, ANKOLE, KIGEZI, SEBEI]
+
+# Name matching for the assessment form (no school code)
+name_match:
+  strip_tokens: [SECONDARY, SCHOOL, SCHOOLS, SEC, SCH, S.S, S.S., SS, S S, HIGH, COLLEGE, COLLEGES, VOCATIONAL, INSTITUTE, THE]
+  min_similarity: 0.86             # difflib ratio for fuzzy matches within the same district

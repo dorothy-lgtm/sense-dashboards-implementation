@@ -40,8 +40,10 @@ jobs:
           KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
         run: python scripts/kobo_pull.py
 
-      - name: Build summary
-        run: python scripts/summarize.py
+      - name: Build summary and school roster
+        run: |
+          python scripts/summarize.py
+          python scripts/roster.py
 
       - name: Send digest
         env:

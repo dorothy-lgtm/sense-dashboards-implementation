@@ -27,6 +27,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 CFG = ROOT / "config" / "digest.yml"
 SUMMARY = ROOT / "site" / "data" / "summary.json"
+ROSTER = ROOT / "site" / "data" / "roster.json"
 EXPORTS = ROOT / "exports"
 STATE = ROOT / "state" / "digest.json"
 
@@ -117,6 +118,11 @@ def main() -> int:
 
     recruited, rec_basis = units_or_subs(rec)
     assessed, asm_basis = units_or_subs(asm)
+    roster_tot = None
+    if ROSTER.exists():   # preferred: the joined school roster (assessments matched by name)
+        roster_tot = json.loads(ROSTER.read_text())["totals"]
+        recruited, rec_basis = roster_tot["schools_recruited"], "distinct school codes in Annex H"
+        assessed, asm_basis = roster_tot["schools_assessed"], f"{roster_tot['assessment_submissions']} assessment forms, {roster_tot['assessment_matched']} matched to a recruited school"
     reached = target and recruited is not None and recruited >= target
 
     # --- attachments ------------------------------------------------------------
@@ -137,7 +143,16 @@ def main() -> int:
         lines.append(f"Recruited schools (Annex H entered): {recruited if recruited is not None else '?'} / {target}  [{rec_basis}]")
         lines.append(f"Schools with assessment form entered: {assessed if assessed is not None else '?'}  [{asm_basis}]")
         if recruited is not None and assessed is not None:
-            lines.append(f"Assessment lag: {max(0, recruited - assessed)} recruited schools without an assessment form")
+            lines.append(f"Awaiting assessment: {max(0, recruited - assessed)} recruited schools without an assessment form"
+                         + (f" (median wait {roster_tot['median_open_lag_days']} days, longest {roster_tot['max_open_lag_days']})"
+                            if roster_tot and roster_tot.get("median_open_lag_days") is not None else ""))
+        if roster_tot:
+            lines.append(f"Districts entered: {roster_tot['districts_entered']}"
+                         + (f" · opened: {roster_tot['districts_opened']}" if roster_tot.get("districts_opened") is not None else "")
+                         + f" · recruited in last 7 days: {roster_tot['recruited_last_7d']}")
+            if roster_tot.get("assessment_unmatched") or roster_tot.get("assessment_ambiguous"):
+                lines.append(f"Assessment forms not matched to a school: {roster_tot['assessment_unmatched']} unmatched, "
+                             f"{roster_tot['assessment_ambiguous']} ambiguous — see the dashboard's data-issues panel")
         lines.append("")
     lines.append("Per form:")
     lines += [form_line(f) for f in summary["forms"]]

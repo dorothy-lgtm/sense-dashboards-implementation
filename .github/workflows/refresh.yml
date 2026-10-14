@@ -40,14 +40,16 @@ jobs:
           KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
         run: python scripts/kobo_pull.py
 
-      - name: Build aggregate summary
-        run: python scripts/summarize.py
+      - name: Build aggregate summary and school roster
+        run: |
+          python scripts/summarize.py
+          python scripts/roster.py
 
       - name: Commit refreshed summary
         run: |
           git config user.name "sense-dashboards[bot]"
           git config user.email "sense-dashboards@users.noreply.github.com"
-          git add site/data/summary.json
+          git add site/data/summary.json site/data/roster.json
           if git diff --cached --quiet; then
             echo "No change in summary"
           else
