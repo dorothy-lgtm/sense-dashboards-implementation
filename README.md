@@ -95,6 +95,25 @@ copy of the data. Each run overwrites `<form>.kobo.xlsx`, `<form>.csv` etc. in o
 
 If none of these are set the step just logs "skipped" and the run still succeeds.
 
+## How the recruitment view is computed (`scripts/roster.py`, `config/roster.yml`)
+
+- **School key** = `school_code` (Annex F, G, H). The School Assessment form has no code, so it is
+  matched by school name + district (exact → cleaned → word-overlap → fuzzy); unmatched and
+  ambiguous forms are listed on the page.
+- **District** of a school = the first 7 characters of its code (SCHrrdd…), which is more reliable
+  than the free-text district field; disagreements are flagged.
+- **Recruited** = ≥1 Annex H record. **Assessed** = ≥1 matched assessment form. **Lag** = days
+  from first Annex H to the assessment (or to today).
+- **District stage** from the three district checklists: preparation (entry-prep form) →
+  pre-entry (pre-entry form; its `num_schools_mobilized` is the eligible-school count) → opened
+  (district meeting form; `meeting_entry_date`, MOU, attendance). A district with schools but no
+  meeting form shows as "entered (no meeting form)".
+- `config/districts.csv` holds the 34 study districts with sub-region; `target_schools` there
+  overrides the pre-entry form, `date_opened` fills in when no meeting form exists.
+- School-name values that contain no school-type word (e.g. a head teacher's name typed in the
+  wrong field) are kept off the page and flagged by code; DEO/DIS/DHO/mobiliser contacts from the
+  district forms are never published.
+
 ## Configuring forms (`config/forms.yml`)
 
 ```yaml

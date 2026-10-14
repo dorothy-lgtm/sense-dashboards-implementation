@@ -159,7 +159,7 @@ function renderRecruit() {
       ${tile("Districts entered", num(t.districts_entered), "≥1 school with Annex H")}
       ${pipelineTile}
       <div class="card tile"><div class="label">Schools recruited</div><div class="value">${num(t.schools_recruited)}<span class="meta"> / ${num(target)}</span></div>
-        <div class="bar"><div style="width:${Math.min(100, pct)}%"></div></div><div class="note">${pct}% · +${num(t.recruited_last_7d)} in last 7 days${t.districts_with_target ? ` · district targets known for ${num(t.districts_with_target)} districts (${num(t.target_schools_known)} schools)` : ""}</div></div>
+        <div class="bar"><div style="width:${Math.min(100, pct)}%"></div></div><div class="note">${pct}% · +${num(t.recruited_last_7d)} in last 7 days${t.districts_with_target ? ` · eligible-school counts known for ${num(t.districts_with_target)} districts (${num(t.target_schools_known)} schools)` : ""}</div></div>
       ${tile("Assessment forms entered", num(t.schools_assessed), `${num(t.assessment_submissions)} forms, ${num(t.assessment_matched)} matched to a recruited school`)}
       ${flagTile("Awaiting assessment", t.awaiting_assessment, t.schools_recruited, "var(--warning)",
          t.median_open_lag_days !== null ? `median wait ${t.median_open_lag_days} d · longest ${t.max_open_lag_days} d` : "")}
@@ -167,7 +167,7 @@ function renderRecruit() {
     </div>
 
     <h3>Recruitment by district <span class="meta">— click a district for its schools</span></h3>
-    <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs the district's target (pre-entry form, or config/districts.csv) &nbsp; · stage from the district checklists: preparation → pre-entry → opened (entry meeting)</div>
+    <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs the district's eligible schools (pre-entry form "target schools mobilized", or config/districts.csv) &nbsp; · stage from the district checklists: preparation → pre-entry → opened (entry meeting)</div>
     <div class="card scroll" id="districts"></div>
 
     <h3 id="schools-title">Schools</h3>
@@ -197,11 +197,15 @@ function renderDistricts() {
     const ref = d.target_schools || maxRef;
     const bar = `<div class="cellbar"><div class="track"><div style="width:${Math.min(100, 100 * d.recruited / ref)}%"></div><div class="asd" style="width:${Math.min(100, 100 * d.assessed / ref)}%"></div></div><span>${num(d.recruited)}${ref !== maxRef ? `<span class="meta"> / ${ref}</span>` : ""}</span></div>`;
     const lag = d.awaiting_assessment ? `${d.awaiting_assessment}${d.max_open_lag_days !== null ? ` <span class="meta">(up to ${d.max_open_lag_days} d)</span>` : ""}` : `<span class="meta">${d.recruited ? 0 : "—"}</span>`;
-    const target = d.target_schools !== null ? `${num(d.target_schools)}<br><span class="meta">${esc(d.target_source || "")}</span>` : `<span class="meta">—</span>`;
+    const formT = d.pre_entry ? d.pre_entry.target : null;
+    const disagree = d.target_schools !== null && formT !== null && formT !== d.target_schools;
+    const target = d.target_schools !== null
+      ? `${num(d.target_schools)}<br><span class="meta">${esc(d.target_source || "")}${disagree ? ` · <span class="chip no">pre-entry form says ${num(formT)}</span>` : ""}</span>`
+      : `<span class="meta">—</span>`;
     return [esc(d.district) + (d.in_config ? "" : ` <span class="chip">not in districts.csv</span>`), esc(d.sub_region || ""), stageCell(d), target, num(d.screened), bar, num(d.assessed), lag];
   });
   $("#districts").innerHTML = table(
-    [{t:"District"},{t:"Sub-region"},{t:"Stage"},{t:"Target schools",num:true},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
+    [{t:"District"},{t:"Sub-region"},{t:"Stage"},{t:"Eligible schools",num:true},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
     rows, "No districts yet", (r, i) => `class="row" data-d="${esc(ds[i].district)}" aria-selected="${ds[i].district === district}"`);
   $("#districts").querySelectorAll("tr.row").forEach(tr => tr.onclick = () => selectDistrict(tr.dataset.d === district ? null : tr.dataset.d));
 }
