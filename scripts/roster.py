@@ -367,7 +367,7 @@ def main() -> int:
         districts.append({
             "district": d, "sub_region": c.get("sub_region"), "in_config": d in cfg_d,
             "target_schools": c.get("target_schools"), "date_opened": c.get("date_opened"), "notes": c.get("notes"),
-            "code_prefix": pfx, "listed_schools": listed_by_prefix.get(pfx) if pfx else None,
+            "code_prefix": pfx,
             "opened": bool(c.get("date_opened")), "entered": bool(rec),
             "screened": sum(1 for r in rs if r["screened"]),
             "recruited": len(rec), "assessed": len(asd), "awaiting_assessment": len(rec) - len(asd),
@@ -395,8 +395,9 @@ def main() -> int:
         "districts_opened": sum(1 for d in districts if d["opened"]) if any_dates else None,
         "districts_entered": sum(1 for d in districts if d["entered"]),
         "schools_on_roster": len(rows),
-        "schools_listed": len(study_list),
-        "listed_prefixes_without_submissions": unnamed_prefixes,
+        "code_slots_per_district": sorted(set(listed_by_prefix.values())),   # pick-list is a fixed block of codes, not a target list
+        "district_prefixes_total": len(listed_by_prefix),
+        "district_prefixes_without_submissions": sorted(unnamed_prefixes),
         "schools_screened": sum(1 for r in rows if r["screened"]),
         "screening_submissions": len(F_subs),
         "screening_outcomes": dict(screening_outcomes),
@@ -421,8 +422,7 @@ def main() -> int:
         "totals": totals,
         "districts": districts,
         "schools": rows,
-        "study_list": [{"code": c, "label": l, "district": prefix_to_district.get(c[:prefix_len]),
-                        "on_roster": c in schools} for c, l in sorted(study_list.items())],
+
         "schools_without_district": [r["code"] for r in no_district],
         "assessment_unmatched": unmatched,
         "assessment_ambiguous": ambiguous,
