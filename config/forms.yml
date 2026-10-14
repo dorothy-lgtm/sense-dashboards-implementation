@@ -47,6 +47,28 @@ forms:
     target: 165
     quality: { min_duration_minutes: 1 }
 
+  # District-level forms (one submission per district visit)
+  - key: district_meeting
+    name: "District Entry Meeting Checklist"
+    uid: aGUvS64iEXZ6iANRKySPRT
+    group_by: [district, region]
+    dedupe_key: [district]
+    quality: { min_duration_minutes: 1 }
+
+  - key: district_pre_entry
+    name: "District Pre-Entry Meeting Checklist"
+    uid: a7MfPjqYzU6MVRefeukEpF
+    group_by: [district, region]
+    dedupe_key: [district]
+    quality: { min_duration_minutes: 1 }
+
+  - key: district_entry_prep
+    name: "District Entry Preparation Checklist"
+    uid: aUngKSUyshfP9f2ncmgpzF
+    group_by: [district, region]
+    dedupe_key: [district]
+    quality: { min_duration_minutes: 1 }
+
 # Data-quality thresholds
 quality:
   min_duration_minutes: 3      # submissions faster than this are flagged
