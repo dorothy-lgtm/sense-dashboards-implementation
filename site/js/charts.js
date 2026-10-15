@@ -84,6 +84,14 @@ function shortLabel(v) {
   s = s.replace(/\b(rdt|act|irs|pf|pv|hrp2|pldh|mou|id)\b/gi, m => m.toUpperCase()).replace(/\bp\.f\b/gi, "P.f").replace(/\bpan\b/gi, "Pan");
   return range && !s.includes("%") ? `${s} (${range})` : s;
 }
+/** 100% stacked horizontal bars. rows = [{label, counts:[...], note?}], bands = [{label, color}] */
+function stackedBars(rows, bands) {
+  if (!rows.length) return `<p class="empty">No data</p>`;
+  return `<div class="legend">${bands.map(b => `<span class="dot" style="background:${b.color}"></span> ${esc(b.label)} &nbsp;`).join("")}</div>
+    <div class="barlist">${rows.map(r => { const t = sum(r.counts) || 1; return `<div class="barrow"><div class="barlabel" title="${esc(r.label)}">${esc(r.label)}</div>
+      <div class="track" style="display:flex;overflow:hidden">${r.counts.map((n, i) => n ? `<div style="width:${100 * n / t}%;background:${bands[i].color};border-radius:0"><title>${esc(bands[i].label)}: ${n} (${pct(n, t)})</title></div>` : "").join("")}</div>
+      <div class="barval">${r.note ?? ""}</div></div>`; }).join("")}</div>`;
+}
 /** Distribution of a categorical answer across records → [{label, value}] sorted desc.
  *  Values are grouped case-insensitively and shown with shortLabel(). */
 function distribution(records, key) {
