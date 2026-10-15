@@ -80,6 +80,9 @@ jobs:
           BOX_SUBFOLDER_BY_DATE: ${{ vars.BOX_SUBFOLDER_BY_DATE }}
         run: python scripts/box_upload.py
 
+      - name: Stamp build version into the page (cache-busting)
+        run: sed -i "s/__BUILD__/${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}/g" site/index.html
+
       - name: Package site for Pages
         uses: actions/upload-pages-artifact@v3
         with:
