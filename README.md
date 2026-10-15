@@ -41,6 +41,21 @@ GitHub Pages  ←  site/index.html + site/data/summary.json
 
 ### Who can see what
 
+**The dashboard is passphrase-protected.** The pipeline encrypts the three data files
+(`summary`, `roster`, `metrics`) with the team passphrase (AES-256-GCM; key derived with
+PBKDF2-SHA256, 200k iterations) and publishes only the ciphertext. The page asks for the
+passphrase once per browser ("Remember on this device" keeps it) and decrypts locally; nothing
+school-level is readable from the public URL or the repository without it.
+
+- Set the passphrase as the GitHub secret `SITE_PASSPHRASE` (Settings → Secrets and variables →
+  Actions). Share it with the team out of band. **Until it is set, the site publishes no data at
+  all.**
+- To change it: update the secret and run "Refresh SENSE dashboards" → everyone re-enters it.
+- "Lock dashboard" in the sidebar forgets the passphrase on that device.
+- Upgrade path if per-person logins are wanted: deploy `site/` to Cloudflare Pages behind
+  Cloudflare Access (email login restricted to @pilgrimafrica.org) — free for small teams.
+
+
 - **The repository and the dashboard page are public.** GitHub Pages on a free personal account requires a public repo. The repo holds code, config and `site/data/summary.json`, which only ever contains counts, dates, enumerator usernames, district/school breakdowns and the question list. If a login wall is wanted later, the same `site/` folder can be deployed to Cloudflare Pages behind Cloudflare Access (team-only sign-in) with a 10-line change to the workflow.
 - **The exports** (`exports/`, incl. Kobo's XLSX with contact fields) exist only inside the workflow run and are deleted with it. They are never committed and never attached as a run artifact (run artifacts on a public repo are downloadable). Once Box is configured they are copied into a Box folder every run — see below.
 - **The token** grants full access to the Kobo account. Because it was shared over chat during setup, regenerate it in Kobo once it is stored as the GitHub secret, and update the secret.

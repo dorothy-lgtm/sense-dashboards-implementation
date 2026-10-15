@@ -122,6 +122,10 @@
   .donut .dlegend div { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; }
   .donut .dlegend .sw { width: 12px; height: 12px; border-radius: 3px; }
   .donut .centre { font-size: 20px; font-weight: 600; }
+  .gate { position: fixed; inset: 0; background: var(--page); z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .gate .card { max-width: 420px; width: 100%; }
+  .gate input[type=password] { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--axis); border-radius: 6px; background: var(--surface); color: var(--ink); }
+  .gate button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 0; background: var(--series-1); color: #fff; cursor: pointer; }
   @media (max-width: 760px) { .app { grid-template-columns: 1fr; } aside { position: static; height: auto; } aside .foot { position: static; margin-top: 16px; } #nav { flex-direction: row; flex-wrap: wrap; } main { padding: 16px; } .tile .value { font-size: 22px; } }
 </style>
 </head>
@@ -130,7 +134,7 @@
   <aside>
     <div class="brand">SENSE Schools Monitor<small>Annex F, G, H · assessments · district checklists</small></div>
     <nav id="nav"></nav>
-    <div class="foot" id="freshness">Loading…</div>
+    <div class="foot"><span id="freshness">Loading…</span><br><a href="#" id="lock" hidden onclick="lockDashboard();return false;" style="color:var(--side-muted)">Lock dashboard</a></div>
   </aside>
   <main>
     <div class="topbar"><h1 id="page-title">SENSE</h1><div id="filters" hidden></div></div>

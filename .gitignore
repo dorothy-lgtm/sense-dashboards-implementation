@@ -7,3 +7,6 @@ __pycache__/
 .venv/
 .DS_Store
 *.zip
+
+# Plaintext dashboard data is never committed (contains school-level data); only *.json.enc is
+site/data/*.json
