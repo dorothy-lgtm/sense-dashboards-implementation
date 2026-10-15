@@ -47,7 +47,7 @@
         ${tile("Open eaves", share(recs, eaves), "of structures")}
         ${tile("Screened windows", share(recs, screened), "all or some")}
         ${(() => { const bw = bedWeighted(dorms); return bw
-            ? tile("Capacity-weighted estimate of beds with a net", pct(bw.share, 1), `${num(bw.beds)} beds in ${num(bw.n)} dormitories · ${share(dorms, netsHung)} of dormitories have any nets`)
+            ? tile("Estimated share of beds with a net", pct(bw.share, 1), `${num(bw.beds)} beds in ${num(bw.n)} dormitories · ${share(dorms, netsHung)} of dormitories have any nets`)
             : tile("Nets hung", share(dorms, netsHung), "of dormitories"); })()}
         ${tile("Windows closed at night", share(dorms, windowsClosed), "of dormitories")}
       </div>
