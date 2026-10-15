@@ -111,7 +111,7 @@ function showPage(key, arg) {
 function rerender() { if (currentPage && PAGES[currentPage].filters) PAGES[currentPage].render(); }
 
 const NAV = [
-  ["recruit", "Recruitment"], ["retro", "Retrospective"], ["infra", "Infrastructure"], ["prevention", "Mosquito prevention"],
+  ["recruit", "Recruitment"], ["retro", "Retrospective"], ["severe", "Severe cases"], ["infra", "Infrastructure"], ["prevention", "Mosquito prevention"],
   ["structures", "Structures"], ["nurse", "Nurse and testing"], ["practices", "Testing & prevention practices"], ["forms", "Form monitoring"],
 ];
 
