@@ -63,6 +63,7 @@
   .tile .value { font-size: 26px; font-weight: 600; margin-top: 2px; }
   .tile .value.small { font-size: 14px; font-weight: 500; line-height: 1.5; text-transform: none; letter-spacing: 0; }
   .tile .note { color: var(--muted); font-size: 12px; }
+  .tile .unit { font-size: 14px; font-weight: 500; color: var(--ink-2); margin-left: 4px; }
   .bar { height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; margin: 8px 0 4px; }
   .bar > div { height: 100%; background: var(--series-1); border-radius: 3px; }
   .meta { color: var(--muted); font-size: 12px; }
@@ -123,6 +124,11 @@
   .donut .dlegend div { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; }
   .donut .dlegend .sw { width: 12px; height: 12px; border-radius: 3px; }
   .donut .centre { font-size: 20px; font-weight: 600; }
+  .plan-form { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 6px 0 10px; }
+  .plan-form label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+  .plan-form input[type=number], .plan-form select { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--axis); border-radius: 6px; background: var(--surface); color: var(--ink); width: 7em; }
+  .plan-form select { width: auto; }
+  .plan-form button { font: inherit; font-size: 12.5px; padding: 4px 10px; border: 1px solid var(--axis); background: var(--surface); color: var(--ink-2); border-radius: 6px; cursor: pointer; }
   .gate { position: fixed; inset: 0; background: var(--page); z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .gate .card { max-width: 420px; width: 100%; }
   .gate input[type=password] { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--axis); border-radius: 6px; background: var(--surface); color: var(--ink); }
@@ -151,6 +157,7 @@
 <script src="js/infra.js?v=__BUILD__"></script>
 <script src="js/prevention.js?v=__BUILD__"></script>
 <script src="js/structures.js?v=__BUILD__"></script>
+<script src="js/planning.js?v=__BUILD__"></script>
 <script src="js/nurse.js?v=__BUILD__"></script>
 <script src="js/practices.js?v=__BUILD__"></script>
 </body>

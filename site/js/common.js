@@ -112,7 +112,7 @@ function rerender() { if (currentPage && PAGES[currentPage].filters) PAGES[curre
 
 const NAV = [
   ["recruit", "Recruitment"], ["retro", "Retrospective"], ["severe", "Severe cases"], ["infra", "Infrastructure"], ["prevention", "Mosquito prevention"],
-  ["structures", "Structures"], ["nurse", "Nurse and testing"], ["practices", "Testing & prevention practices"], ["forms", "Form monitoring"],
+  ["structures", "Structures"], ["planning", "Coverage planning"], ["nurse", "Nurse and testing"], ["practices", "Testing & prevention practices"], ["forms", "Form monitoring"],
 ];
 
 /* ---------------------------------------------------------------- encrypted data + passphrase gate */
