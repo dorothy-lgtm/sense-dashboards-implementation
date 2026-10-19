@@ -36,6 +36,15 @@ def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
+def report(msg: str) -> None:
+    """Log and also write to the GitHub run summary so the outcome is readable without opening logs."""
+    log(msg)
+    p = os.environ.get("GITHUB_STEP_SUMMARY")
+    if p:
+        with open(p, "a", encoding="utf-8") as f:
+            f.write(f"**Daily export email:** {msg}\n\n")
+
+
 def load_state() -> dict:
     if STATE.exists():
         try:
@@ -174,7 +183,7 @@ def main() -> int:
 
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = os.environ.get("SMTP_FROM") or os.environ.get("SMTP_USER", "")
+    msg["From"] = (os.environ.get("SMTP_FROM") or os.environ.get("SMTP_USER") or "").strip()
     msg["To"] = ", ".join(cfg.get("to", []))
     if cfg.get("cc"):
         msg["Cc"] = ", ".join(cfg["cc"])
@@ -185,23 +194,42 @@ def main() -> int:
     if dry:
         print(f"--- DRY RUN: would send to {recipients}\nSubject: {subject}\n\n{body}")
     else:
-        user, password = os.environ.get("SMTP_USER"), os.environ.get("SMTP_PASSWORD")
+        # GitHub passes unset variables as EMPTY strings, so use `or` for every default.
+        user = (os.environ.get("SMTP_USER") or "").strip()
+        password = (os.environ.get("SMTP_PASSWORD") or "").replace(" ", "")   # Google app passwords are shown with spaces
         if not user or not password:
-            log("SMTP_USER / SMTP_PASSWORD not set — email skipped")
+            report("Email skipped: SMTP_USER / SMTP_PASSWORD secrets are not set (see README → Daily export email).")
+            print("::warning title=Daily export email not configured::Set the SMTP_USER and SMTP_PASSWORD secrets to start sending.")
             zip_path.unlink(missing_ok=True)
-            return 2
-        host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-        port = int(os.environ.get("SMTP_PORT", "465"))
-        if port == 465:
-            with smtplib.SMTP_SSL(host, port, timeout=60) as s:
-                s.login(user, password)
-                s.send_message(msg, to_addrs=recipients)
-        else:
-            with smtplib.SMTP(host, port, timeout=60) as s:
-                s.starttls()
-                s.login(user, password)
-                s.send_message(msg, to_addrs=recipients)
+            return 0
+        host = (os.environ.get("SMTP_HOST") or "smtp.gmail.com").strip()
+        try:
+            port = int((os.environ.get("SMTP_PORT") or "465").strip())
+        except ValueError:
+            port = 465
+        masked = user[:2] + "…@" + user.split("@")[-1] if "@" in user else "(user)"
+        try:
+            if port == 465:
+                with smtplib.SMTP_SSL(host, port, timeout=60) as s:
+                    s.login(user, password)
+                    s.send_message(msg, to_addrs=recipients)
+            else:
+                with smtplib.SMTP(host, port, timeout=60) as s:
+                    s.starttls()
+                    s.login(user, password)
+                    s.send_message(msg, to_addrs=recipients)
+        except smtplib.SMTPAuthenticationError as e:
+            report(f"Email NOT sent — the mail server rejected the login for {masked} on {host}:{port}. "
+                    "For Google Workspace the SMTP_PASSWORD must be an App Password (Google Account → Security → 2-Step Verification → App passwords), "
+                    f"not the account password. Server said: {e.smtp_code} {e.smtp_error.decode(errors='replace') if isinstance(e.smtp_error, bytes) else e.smtp_error}")
+            zip_path.unlink(missing_ok=True)
+            return 1
+        except (smtplib.SMTPException, OSError) as e:
+            report(f"Email NOT sent — could not deliver via {host}:{port} as {masked}: {type(e).__name__}: {e}")
+            zip_path.unlink(missing_ok=True)
+            return 1
         log(f"sent to {recipients}: {subject}")
+        report(f"Email sent to {', '.join(recipients)} — {subject}")
 
     state["last_sent"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     state["sent_count"] = int(state.get("sent_count", 0)) + 1

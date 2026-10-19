@@ -37,7 +37,7 @@ def token() -> str:
         "grant_type": "client_credentials",
         "client_id": os.environ["BOX_CLIENT_ID"],
         "client_secret": os.environ["BOX_CLIENT_SECRET"],
-        "box_subject_type": os.environ.get("BOX_SUBJECT_TYPE", "enterprise"),
+        "box_subject_type": os.environ.get("BOX_SUBJECT_TYPE") or "enterprise",
         "box_subject_id": os.environ["BOX_SUBJECT_ID"],
     }, timeout=60)
     r.raise_for_status()
