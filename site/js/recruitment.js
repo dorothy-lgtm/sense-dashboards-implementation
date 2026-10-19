@@ -7,6 +7,11 @@ function renderRecruit() {
   const pct = target ? Math.round(1000 * t.schools_recruited / target) / 10 : null;
   const openedTile = tile("Districts opened", num(t.districts_opened), `entry-meeting form submitted · ${num(t.districts_in_config)} study districts` +
       (t.districts_entered_without_meeting_form ? `<br><span class="flag"><span class="dot" style="background:var(--warning)"></span>${num(t.districts_entered_without_meeting_form)} more have schools but no meeting form</span>` : ""));
+  const entered = ROSTER.districts.filter(d => d.entered);
+  const known = entered.filter(d => d.target_schools !== null), unknown = entered.filter(d => d.target_schools === null);
+  const eligKnown = known.reduce((a, d) => a + Math.max(d.target_schools, d.recruited), 0), recKnown = known.reduce((a, d) => a + d.recruited, 0), recUnknown = unknown.reduce((a, d) => a + d.recruited, 0);
+  const headroomTile = tile("If all eligible schools in entered districts were recruited", `≥ ${num(eligKnown + recUnknown)}`,
+      `${num(known.length)} entered districts with an eligible count: ${num(eligKnown)} eligible, ${num(recKnown)} recruited, ${num(eligKnown - recKnown)} remaining · ${num(unknown.length)} entered districts with no eligible count (${num(recUnknown)} recruited there) — true figure is higher if those have more eligible schools`, true);
   const pipelineTile = tile("Districts in pipeline", `${num(t.districts_prep + t.districts_pre_entry)}`, `${num(t.districts_prep)} preparation · ${num(t.districts_pre_entry)} pre-entry done · ${num(t.districts_scheduled)} with a meeting date set`);
   const elig = Object.entries(t.screening_outcomes || {}).map(([k, v]) => `${esc(titleCase(k))}: ${num(v)}`).join(" · ");
   el.innerHTML = `
@@ -14,6 +19,7 @@ function renderRecruit() {
       ${openedTile}
       ${tile("Districts entered", num(t.districts_entered), "≥1 school with Annex H")}
       ${pipelineTile}
+      ${headroomTile}
       <div class="card tile"><div class="label">Schools recruited</div><div class="value">${num(t.schools_recruited)}<span class="meta"> / ${num(target)}</span></div>
         <div class="bar"><div style="width:${Math.min(100, pct)}%"></div></div><div class="note">${pct}% · +${num(t.recruited_last_7d)} in last 7 days${t.districts_with_target ? ` · eligible-school counts known for ${num(t.districts_with_target)} districts (${num(t.target_schools_known)} schools)` : ""}</div></div>
       ${tile("Assessment forms entered", num(t.schools_assessed), `${num(t.assessment_submissions)} forms, ${num(t.assessment_matched)} matched to a recruited school`)}
@@ -51,7 +57,7 @@ function renderDistricts() {
   const maxRef = Math.max(1, ...ds.map(d => d.target_schools || d.recruited));
   const rows = ds.map(d => {
     const ref = d.target_schools || maxRef;
-    const bar = `<div class="cellbar"><div class="track"><div style="width:${Math.min(100, 100 * d.recruited / ref)}%"></div><div class="asd" style="width:${Math.min(100, 100 * d.assessed / ref)}%"></div></div><span>${num(d.recruited)}${ref !== maxRef ? `<span class="meta"> / ${ref}</span>` : ""}</span></div>`;
+    const bar = `<div class="cellbar"><div class="track"><div style="width:${Math.min(100, 100 * d.recruited / ref)}%"></div><div class="asd" style="width:${Math.min(100, 100 * d.assessed / ref)}%"></div></div><span>${num(d.recruited)}${ref !== maxRef ? `<span class="meta"> / ${ref}${d.target_schools !== null && d.target_schools > d.recruited ? ` · ${num(d.target_schools - d.recruited)} to go` : ""}</span>` : ""}</span></div>`;
     const lag = d.awaiting_assessment ? `${d.awaiting_assessment}${d.max_open_lag_days !== null ? ` <span class="meta">(up to ${d.max_open_lag_days} d)</span>` : ""}` : `<span class="meta">${d.recruited ? 0 : "—"}</span>`;
     const formT = d.pre_entry ? d.pre_entry.target : null;
     const disagree = d.target_schools !== null && formT !== null && formT !== d.target_schools;
