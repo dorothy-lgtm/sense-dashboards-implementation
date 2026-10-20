@@ -14,8 +14,10 @@
     return schools.filter(s => s.G).map(s => {
       const b = boardersOf(s), bath = g(s, "bathrooms");
       const per = isNum(b) && isNum(bath) && bath > 0 ? b / bath : null;
+      const parts = s.G.n_parts || s.G.n_submissions || 1, coll = s.G.collated || {};
       return { code: s.code, school: s.name, district: s.district, dorms: g(s, "dorms"), classrooms: g(s, "classrooms"), bathrooms: bath, quarters: g(s, "quarters"),
-               structures: structuresOf(s), boarders: b, per, status: status(per) };
+               structures: structuresOf(s), boarders: b, per, status: status(per), parts, resends: s.G.resends || 0,
+               collation: Object.entries(coll).map(([k, v]) => `${k}: ${v}`).join("; "), measured: (s.G.repeats?.Classrooms_dormitories_grp || []).length };
     });
   }
 
@@ -24,6 +26,7 @@
     const el = $("#page-infra");
     const rows = rowsFor(filteredSchools());
     const surveys = sum(filteredSchools().map(s => s.G?.n_submissions || 0));
+    const multi = rows.filter(r => r.parts > 1), resent = sum(rows.map(r => r.resends));
     const avg = k => mean(rows.map(r => r[k]).filter(isNum));
     const metrics = [["dorms", "Dormitories"], ["classrooms", "Classrooms"], ["bathrooms", "Bathrooms"], ["quarters", "Staff quarters"], ["structures", "Total structures"]];
 
@@ -34,7 +37,8 @@
         ${tile("Avg bathrooms", num(avg("bathrooms")), "stances per school")}
         ${tile("Avg staff quarters", num(avg("quarters")), "per school")}
         ${tile("Avg structures", num(avg("structures")), "per school")}
-        ${tile("Schools surveyed", num(rows.length), `${num(surveys)} Annex G surveys`)}
+        ${tile("Schools surveyed", num(rows.length), `${num(surveys)} Annex G submissions`)}
+        ${tile("Multi-part submissions", num(multi.length), multi.length ? `schools entered in several parts, collated: every measured structure kept, totals summed across parts unless identical${resent ? ` · ${num(resent)} exact re-send${resent > 1 ? "s" : ""} dropped` : ""}` : "every school entered in one submission")}
       </div>
       <div class="grid-2" style="margin-top:12px">
         <div class="card"><h3>Facilities by district <span class="sub">Average per school</span></h3>
@@ -58,7 +62,8 @@
       : `<p class="empty">No school has both boarders (Annex H) and bathrooms (Annex G) recorded for this selection.</p>`;
 
     sortableTable($("#infra-table"), [
-      { key: "school", label: "School" }, { key: "district", label: "District" },
+      { key: "school", label: "School", render: (v, r) => `${esc(v)}${r.parts > 1 ? ` <span class="chip" title="${esc(r.collation)}">${r.parts} parts</span>` : ""}` }, { key: "district", label: "District" },
+      { key: "measured", label: "Structures measured", num: true },
       { key: "dorms", label: "Dorms", num: true }, { key: "classrooms", label: "Classrooms", num: true }, { key: "bathrooms", label: "Bathrooms", num: true },
       { key: "quarters", label: "Quarters", num: true }, { key: "boarders", label: "Boarders", num: true },
       { key: "per", label: "Per bathroom", num: true, render: v => isNum(v) ? num(Math.round(v * 10) / 10) : "—" },

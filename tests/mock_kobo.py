@@ -320,6 +320,14 @@ def build():
                                                           "Classrooms_dormitories_grp/dormitory_capacity": random.randint(20, 120), "Classrooms_dormitories_grp/presence_open_eaves": random.choice(["yes", "no"]),
                                                           "Classrooms_dormitories_grp/screened_windows": random.choice(["yes", "no"]), "Classrooms_dormitories_grp/bednets_hung": random.choice(["yes", "no"])} for _ in range(random.randint(1, 4))],
                           "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
+    # G in two parts for one school (different days, different blocks) plus one exact re-send
+    g0 = data["G"][0]
+    part2 = {**g0, "_id": (sid := sid + 1), "_uuid": f"g-{sid}", "_submission_time": ts(when(3) + timedelta(days=1, hours=5)),
+             "physical_infrastructure_grp/total_dormitories": 1, "physical_infrastructure_grp/total_classrooms": g0["physical_infrastructure_grp/total_classrooms"],
+             "Classrooms_dormitories_grp": [{"Classrooms_dormitories_grp/structure_category": "dormitory", "Classrooms_dormitories_grp/wall_material": "brick", "Classrooms_dormitories_grp/roof_material": "iron_sheets",
+                                              "Classrooms_dormitories_grp/dormitory_capacity": 80, "Classrooms_dormitories_grp/presence_open_eaves": "yes", "Classrooms_dormitories_grp/screened_windows": "no", "Classrooms_dormitories_grp/bednets_hung": "yes"}]}
+    data["G"].append(part2)
+    data["G"].append({**part2, "_id": (sid := sid + 1), "_uuid": f"g-{sid}", "_submission_time": ts(when(3) + timedelta(days=1, hours=6))})
     # H: 74 recruited (3 with region typed as district)
     for i, s in enumerate(recruited):
         t = when(i); sid += 1

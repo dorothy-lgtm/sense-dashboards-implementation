@@ -163,6 +163,62 @@ def duty_hours(answers: dict) -> float | None:
     d = (b - a) % 1440
     return 24.0 if d == 0 else round(d / 60, 1)
 
+# Annex G is often submitted in several PARTS for one school (different blocks, different days). Those
+# parts are collated: every structure row is kept (identical rows inside one part are real — e.g. four
+# identical dormitory blocks), exact re-sends of a whole submission are dropped, numeric totals are
+# summed across the parts unless every part reports the same figure (then it is the whole-school figure),
+# and yes/no questions are "yes" if any part says so. Other questions take the latest non-empty answer.
+MULTI_PART_TAGS = {"G"}
+
+
+def collate(tag: str, recs: list[dict]) -> dict:
+    uniq, resends, seen = [], 0, set()
+    for r in recs:
+        sig = json.dumps({"a": r["answers"], "r": r["repeats"]}, sort_keys=True)
+        if sig in seen:
+            resends += 1
+            continue
+        seen.add(sig)
+        uniq.append(r)
+    latest = uniq[-1]
+    entry = {"n_submissions": len(recs), "n_parts": len(uniq), "resends": resends, "latest_date": latest["date"], "answers": dict(latest["answers"])}
+    merged: dict[str, list[dict]] = defaultdict(list)
+    if tag in MULTI_PART_TAGS:
+        for r in uniq:                                   # every row from every part
+            for rname, rows in r["repeats"].items():
+                merged[rname].extend(rows)
+        if len(uniq) > 1:
+            collated = {}
+            keys = {k for r in uniq for k in r["answers"]}
+            for k in keys:
+                vals = [r["answers"][k] for r in uniq if r["answers"].get(k) not in (None, "")]
+                if not vals:
+                    continue
+                if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vals):
+                    if len(set(vals)) == 1:
+                        entry["answers"][k] = vals[0]; collated[k] = "same in every part"
+                    else:
+                        entry["answers"][k] = sum(vals); collated[k] = f"sum of {len(vals)} parts ({' + '.join(str(v) for v in vals)})"
+                elif all(isinstance(v, str) and v.strip().lower() in ("yes", "no") for v in vals):
+                    entry["answers"][k] = "yes" if any(v.strip().lower() == "yes" for v in vals) else "no"
+                    if len(set(v.strip().lower() for v in vals)) > 1:
+                        collated[k] = "yes in at least one part"
+                else:
+                    entry["answers"][k] = vals[-1]
+            entry["collated"] = collated
+            entry["part_dates"] = [r["date"] for r in uniq]
+    else:                                                # one record per school expected: keep latest answers, union of repeat rows
+        seen_rows = set()
+        for r in uniq:
+            for rname, rows in r["repeats"].items():
+                for row in rows:
+                    k = json.dumps(row, sort_keys=True)
+                    if k not in seen_rows:
+                        seen_rows.add(k)
+                        merged[rname].append(row)
+    entry["repeats"] = dict(merged)
+    return entry
+
 
 def main() -> int:
     if not ROSTER.exists():
@@ -204,22 +260,11 @@ def main() -> int:
             per_school[str(code)].append(rec)
         for code, recs in per_school.items():
             recs.sort(key=lambda r: (r["date"] or "", r["submitted"] or ""))
-            latest = recs[-1]
-            entry = {"n_submissions": len(recs), "latest_date": latest["date"], "answers": latest["answers"]}
-            # repeat children from ALL submissions (e.g. every structure, every term) — de-duplicated
-            merged: dict[str, list[dict]] = defaultdict(list)
-            seen = set()
-            for r in recs:
-                for rname, rows in r["repeats"].items():
-                    for row in rows:
-                        k = json.dumps(row, sort_keys=True)
-                        if k not in seen:
-                            seen.add(k)
-                            merged[rname].append(row)
-            entry["repeats"] = dict(merged)
-            schools[code][tag] = entry
+            schools[code][tag] = collate(tag, recs)
+        multi = [c for c, e in ((c, schools[c].get(tag)) for c in per_school) if e and e.get("n_parts", 1) > 1]
+        resent = sum((schools[c].get(tag) or {}).get("resends", 0) for c in per_school)
         log(f"{tag}: {sum(len(v) for v in per_school.values())} submissions on {len(per_school)} schools; "
-            f"repeats: {list(reps)}")
+            f"repeats: {list(reps)}" + (f"; {len(multi)} schools with multi-part submissions collated" if multi else "") + (f"; {resent} exact re-sends dropped" if resent else ""))
 
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat(),

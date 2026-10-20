@@ -177,6 +177,15 @@ python scripts/summarize.py
 - **Dashboard says data is N hours old** — the scheduled run failed; open the Actions tab for the log.
 - **"no saved export settings on this form"** — in Kobo open the form → Data → Downloads, create an export (XLSX, labels, "include groups" as preferred) and save it; the pipeline picks it up on the next run.
 
+## Multi-part Annex G submissions
+
+One school's structure survey is often entered in several parts (different blocks, different days). `metrics.py`
+collates them: every measured structure from every part is kept (identical rows inside one part are real — e.g.
+four identical dormitory blocks), an exact re-send of a whole submission is dropped, numeric totals such as
+`total_dormitories` are summed across the parts unless every part reports the same figure, and yes/no questions
+are "yes" if any part says so. The Infrastructure page shows a "n parts" chip on collated schools and the rule
+applied to each total (hover the chip).
+
 ## Prospective logs (nurse log, bursar log)
 
 The two continuous log forms (`nurse_log`, `bursar_log` in `config/forms.yml`) feed the **Prospective** page.

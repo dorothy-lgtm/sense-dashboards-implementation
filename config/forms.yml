@@ -28,7 +28,7 @@ forms:
     name: "Annex G — Structure, Prevention & Vector (Form B)"
     uid: axDMBKEfMJYtZ5LiHqCMbb
     group_by: [district, region, school_name]
-    dedupe_key: [school_code]
+    dedupe_key: []               # one school is often entered in several parts; metrics.py collates them (exact re-sends are dropped there)
     target: 165
 
   - key: retrospective
