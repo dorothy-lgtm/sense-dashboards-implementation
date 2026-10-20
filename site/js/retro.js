@@ -27,11 +27,12 @@
       <div class="tiles">
         ${tile("Districts covered", num(districts.size))}
         ${tile("Schools covered", num(schools.length), `${num(recs.length)} school-term records`)}
-        ${tile("Avg boarders", num(avg(recs, F.boarders)), "per school-term")}
-        ${tile("Avg confirmed cases", num(avg(recs, F.confirmed)), "per school-term")}
-        ${tile("Avg severe cases", num(avg(recs, F.severe)), "per school-term")}
-        ${tile("Avg RDT used", num(avg(recs, F.rdt)), "per school-term")}
-        ${tile("Avg ACT used", num(avg(recs, F.act)), "per school-term")}
+        ${rangeTile("Avg boarders", recs.map(r => r[F.boarders]), { note: "per school-term" })}
+        ${rangeTile("Avg malaria cases (all)", recs.map(r => r[F.cases]), { note: "per school-term" })}
+        ${rangeTile("Avg confirmed cases", recs.map(r => r[F.confirmed]), { note: "per school-term" })}
+        ${rangeTile("Avg severe cases", recs.map(r => r[F.severe]), { note: "per school-term" })}
+        ${rangeTile("Avg RDT used", recs.map(r => r[F.rdt]), { note: "per school-term" })}
+        ${rangeTile("Avg ACT used", recs.map(r => r[F.act]), { note: "per school-term" })}
       </div>
       <div class="grid-2" style="margin-top:12px">
         <div class="card"><h3>Cases by term <span class="sub">Average per school; the term filter does not narrow this chart</span></h3>

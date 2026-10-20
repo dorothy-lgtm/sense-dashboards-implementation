@@ -17,6 +17,21 @@ let SUMMARY = null, ROSTER = null, METRICS = null;
 const PAGES = {};                        // key → { title, render(arg), filters: bool }
 const FILTER = { district: "", school: "", term: "" };   // shared filters for analytic pages
 
+/* ---------------------------------------------------------------- descriptive stats */
+function describe(values) {
+  const a = values.filter(isNum).sort((x, y) => x - y);
+  if (!a.length) return null;
+  const q = p => a[Math.min(a.length - 1, Math.max(0, Math.round(p * (a.length - 1))))];
+  return { n: a.length, mean: mean(a), median: median(a), min: a[0], max: a[a.length - 1], p10: q(0.1), p90: q(0.9), total: sum(a) };
+}
+/** Tile showing an average with its range underneath: "median · min–max · p10–p90 · n" */
+function rangeTile(label, values, { unit = "", note = "" } = {}) {
+  const d = describe(values);
+  if (!d) return tile(label, "—", note);
+  return tile(label, `${num(Math.round(d.mean * 10) / 10)}${unit ? `<span class="unit">${unit}</span>` : ""}`,
+    `median ${num(d.median)} · range ${num(d.min)}–${num(d.max)} · p10–p90 ${num(d.p10)}–${num(d.p90)}${note ? ` · ${note}` : ""}`);
+}
+
 /* ---------------------------------------------------------------- tiles & tables */
 function tile(label, value, note = "", small = false) {
   return `<div class="card tile"><div class="label">${label}</div><div class="value${small ? " small" : ""}">${value}</div><div class="note">${note}</div></div>`;

@@ -35,8 +35,12 @@ function renderRecruit() {
     <h3 id="schools-title">Schools</h3>
     <div class="card scroll" id="schools"></div>
 
+    <h3>Baseline (Annex H) across recruited schools <span class="meta">— averages with ranges; one record per school-term</span></h3>
+    <div class="card" id="baseline"></div>
+
     <h3>Data issues to fix in Kobo</h3>
     <div class="two" id="issues"></div>`;
+  renderBaseline();
   renderDistricts();
   renderSchools();
   renderIssues();
@@ -77,6 +81,7 @@ function selectDistrict(d) {
   setHash("recruit", d || "");
   $("#districts").querySelectorAll("tr.row").forEach(tr => tr.setAttribute("aria-selected", tr.dataset.d === d));
   renderSchools();
+  renderBaseline();
   $("#schools-title").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -106,6 +111,22 @@ function renderSchools() {
   const headers = [{t:"School"},{t:"District"},{t:"Forms"},{t:"Screening"},{t:"Recruited (Annex H) · terms entered"},{t:"Assessment"}];
   if (district) headers.splice(1, 1), rows.forEach(r => r.splice(1, 1));
   $("#schools").innerHTML = table(headers, rows, "No schools on the roster for this selection");
+}
+
+function renderBaseline() {
+  const el = $("#baseline");
+  if (!METRICS) { el.innerHTML = `<p class="empty">No metrics yet.</p>`; return; }
+  const recruitedCodes = new Set(ROSTER.schools.filter(s => s.recruited && (!district || s.district === district)).map(s => s.code));
+  const rows = METRICS.schools.filter(s => recruitedCodes.has(s.code)).flatMap(s => (s.H?.repeats?.Enrollment_data_grp || []).map(r => ({ ...r, _code: s.code })));
+  const latest = new Map(); rows.forEach(r => latest.set(r._code, r));   // last term row per school
+  const metrics = [["Boarders", "total_boarders"], ["Enrolment", "total_school_enroll"], ["Malaria cases (all)", "total_malaria_cases"], ["Confirmed cases", "confirmed_malaria"], ["Severe cases", "total_severe_cases"], ["RDTs used", "total_rdt_used"], ["ACTs used", "total_act_used"]];
+  const line = (label, vals) => { const d = describe(vals); return d ? [label, num(d.n), num(Math.round(d.mean * 10) / 10), num(d.median), `${num(d.min)}–${num(d.max)}`, `${num(d.p10)}–${num(d.p90)}`, num(d.total)] : [label, "0", "—", "—", "—", "—", "—"]; };
+  el.innerHTML = `<div class="two">
+    <div><h3>Per school-term record <span class="sub">${num(rows.length)} records from ${num(recruitedCodes.size)} recruited schools${district ? ` in ${esc(district)}` : ""}</span></h3>
+      ${table([{t:"Metric"},{t:"Records",num:true},{t:"Mean",num:true},{t:"Median",num:true},{t:"Range",num:true},{t:"p10–p90",num:true},{t:"Total",num:true}], metrics.map(([l, k]) => line(l, rows.map(r => r[k]))))}</div>
+    <div><h3>Per school, latest term entered <span class="sub">${num(latest.size)} schools</span></h3>
+      ${table([{t:"Metric"},{t:"Schools",num:true},{t:"Mean",num:true},{t:"Median",num:true},{t:"Range",num:true},{t:"p10–p90",num:true},{t:"Total",num:true}], metrics.map(([l, k]) => line(l, [...latest.values()].map(r => r[k]))))}</div>
+  </div>`;
 }
 
 function renderIssues() {
