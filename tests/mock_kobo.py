@@ -177,39 +177,86 @@ SURVEYS["DP"] = [
     {"type": "text", "name": "deo_name", "$xpath": "meeting_info_grp/deo_name", "label": ["DEO name"]},
     {"type": "text", "name": "deo_contact", "$xpath": "meeting_info_grp/deo_contact", "label": ["DEO phone"]},
 ]
-# Prospective logs. The real forms were not inspected when this mock was written: the nurse log
-# is mocked as one submission per patient visit (repeat-free, with a free-text name that must
-# never be published) and the bursar log as one weekly summary per school.
+# Prospective logs, mirroring the real forms (state/forms_schema.json): the nurse log is a weekly
+# school summary, the bursar log a termly procurement/cost summary. Both carry staff names and
+# phone numbers that must never be published.
+_yn = {"select_from_list_name": "yn"}
 SURVEYS["NL"] = [
     {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
-    {"type": "select_one", "name": "school_code", "$xpath": "log_info_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
-    {"type": "text", "name": "school_name", "$xpath": "log_info_grp/school_name", "label": ["School"]},
-    {"type": "date", "name": "visit_date", "$xpath": "log_info_grp/visit_date", "label": ["Date of visit"]},
-    {"type": "text", "name": "student_name", "$xpath": "patient_grp/student_name", "label": ["Student name"]},
-    {"type": "select_one", "name": "sex", "$xpath": "patient_grp/sex", "label": ["Sex"], "select_from_list_name": "sex"},
-    {"type": "integer", "name": "age", "$xpath": "patient_grp/age", "label": ["Age"]},
-    {"type": "select_one", "name": "boarder", "$xpath": "patient_grp/boarder", "label": ["Boarder"], "select_from_list_name": "yn"},
-    {"type": "select_one", "name": "rdt_done", "$xpath": "malaria_grp/rdt_done", "label": ["RDT done"], "select_from_list_name": "yn"},
-    {"type": "select_one", "name": "rdt_result", "$xpath": "malaria_grp/rdt_result", "label": ["RDT result"], "select_from_list_name": "results"},
-    {"type": "select_one", "name": "act_given", "$xpath": "malaria_grp/act_given", "label": ["ACT given"], "select_from_list_name": "yn"},
-    {"type": "select_one", "name": "severe_case", "$xpath": "malaria_grp/severe_case", "label": ["Severe malaria"], "select_from_list_name": "yn"},
-    {"type": "select_one", "name": "referred", "$xpath": "malaria_grp/referred", "label": ["Referred"], "select_from_list_name": "yn"},
-    {"type": "text", "name": "notes", "$xpath": "malaria_grp/notes", "label": ["Notes"]},
+    {"type": "select_one", "name": "school_code", "$xpath": "school_info_grp/school_code", "label": ["School code (de-identified study code)"], "select_from_list_name": "schools"},
+    {"type": "text", "name": "school_name", "$xpath": "school_info_grp/school_name", "label": ["Name of the school (Official name)"]},
+    {"type": "text", "name": "district", "$xpath": "school_info_grp/district", "label": ["District"]},
+    {"type": "text", "name": "nurse_name", "$xpath": "school_info_grp/nurse_name", "label": ["Name of nurse"]},
+    {"type": "text", "name": "nurse_contact", "$xpath": "school_info_grp/nurse_contact", "label": ["Contact of nurse"]},
+    {"type": "select_one", "name": "year", "$xpath": "period_grp/year", "label": ["Select year"], "select_from_list_name": "years"},
+    {"type": "select_one", "name": "term", "$xpath": "period_grp/term", "label": ["Select term"], "select_from_list_name": "terms"},
+    {"type": "date", "name": "week_start_date", "$xpath": "period_grp/week_start_date", "label": ["Reporting period - Week start date"]},
+    {"type": "date", "name": "week_end_date", "$xpath": "period_grp/week_end_date", "label": ["Reporting period - Week end date"]},
+    {"type": "integer", "name": "total_cases_boarders", "$xpath": "cases_grp/total_cases_boarders", "label": ["Total cases - boarders"]},
+    {"type": "integer", "name": "confirmed_boarders", "$xpath": "cases_grp/confirmed_boarders", "label": ["Confirmed - boarders"]},
+    {"type": "integer", "name": "total_cases_day", "$xpath": "cases_grp/total_cases_day", "label": ["Total cases - day students"]},
+    {"type": "integer", "name": "confirmed_day", "$xpath": "cases_grp/confirmed_day", "label": ["Confirmed - day students"]},
+    {"type": "calculate", "name": "val_confirmed_cases_boarders", "$xpath": "cases_grp/val_confirmed_cases_boarders"},
+    {"type": "integer", "name": "total_severe_cases", "$xpath": "cases_grp/total_severe_cases", "label": ["Total severe cases"]},
+    {"type": "integer", "name": "severe_cases_boarders", "$xpath": "cases_grp/severe_cases_boarders", "label": ["Severe cases - boarders"]},
+    {"type": "select_one", "name": "chk_mal_tests_treat", "$xpath": "supplies_grp/chk_mal_tests_treat", "label": ["Does the school test and treat malaria cases within school's infirmry?"], **_yn},
+    {"type": "integer", "name": "rdt_used", "$xpath": "supplies_grp/rdt_used", "label": ["Total RDTs used"]},
+    {"type": "integer", "name": "acts_used", "$xpath": "supplies_grp/acts_used", "label": ["Total ACTs used"]},
+    {"type": "integer", "name": "artesunate_used", "$xpath": "supplies_grp/artesunate_used", "label": ["Total IV Artesunate vials used"]},
+    {"type": "select_one", "name": "rdt_stock", "$xpath": "supplies_grp/rdt_stock", "label": ["Any RDT stockout?"], **_yn},
+    {"type": "select_one", "name": "act_stock", "$xpath": "supplies_grp/act_stock", "label": ["Any ACT stockout?"], **_yn},
+    {"type": "select_one", "name": "notified_stockout", "$xpath": "supplies_grp/notified_stockout", "label": ["Study team notified of stockout?"], **_yn},
+    {"type": "select_one", "name": "chk_calibration_cohort_school", "$xpath": "absent_grp/chk_calibration_cohort_school", "label": ["Is this school one of the absenteeism calibration cohort?"], **_yn},
+    {"type": "integer", "name": "ord_casedayslost_boarders", "$xpath": "absent_grp/ord_casedayslost_boarders", "label": ["Uncomplicated-case days lost — boarders"]},
+    {"type": "integer", "name": "ord_casedayslost_day", "$xpath": "absent_grp/ord_casedayslost_day", "label": ["Uncomplicated-case days lost — day students"]},
+    {"type": "integer", "name": "sev_casedayslost_boarders", "$xpath": "absent_grp/sev_casedayslost_boarders", "label": ["Severe-case days lost — boarders"]},
+    {"type": "integer", "name": "sev_casedayslost_day", "$xpath": "absent_grp/sev_casedayslost_day", "label": ["Severe-case days lost — day students"]},
+    {"type": "select_one", "name": "respond_attestation", "$xpath": "sign_grp/respond_attestation", "label": ["Nurse attestation"], **_yn},
+    {"type": "date", "name": "attestation_date", "$xpath": "sign_grp/attestation_date", "label": ["Nurse attestation date"]},
+    {"type": "select_one", "name": "data_officer", "$xpath": "sign_grp/data_officer", "label": ["Select your data officer"], "select_from_list_name": "officers"},
 ]
 SURVEYS["BL"] = [
     {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
-    {"type": "select_one", "name": "school_code", "$xpath": "log_info_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
-    {"type": "date", "name": "week_start_date", "$xpath": "log_info_grp/week_start_date", "label": ["Week starting"]},
-    {"type": "integer", "name": "boarders_present", "$xpath": "weekly_grp/boarders_present", "label": ["Boarders present this week"]},
-    {"type": "integer", "name": "students_absent_illness", "$xpath": "weekly_grp/students_absent_illness", "label": ["Students absent due to illness"]},
-    {"type": "integer", "name": "students_sent_home", "$xpath": "weekly_grp/students_sent_home", "label": ["Students sent home sick"]},
-    {"type": "integer", "name": "sickbay_admissions", "$xpath": "weekly_grp/sickbay_admissions", "label": ["Sick-bay admissions"]},
-    {"type": "integer", "name": "malaria_expenditure_ugx", "$xpath": "weekly_grp/malaria_expenditure_ugx", "label": ["Spent on malaria drugs/tests (UGX)"]},
-    {"type": "text", "name": "bursar_name", "$xpath": "weekly_grp/bursar_name", "label": ["Bursar"]},
+    {"type": "select_one", "name": "school_code", "$xpath": "school_info_grp/school_code", "label": ["School code (de-identified study code)"], "select_from_list_name": "schools"},
+    {"type": "text", "name": "school_name", "$xpath": "school_info_grp/school_name", "label": ["Name of the school (Official name)"]},
+    {"type": "text", "name": "bursar_name", "$xpath": "school_info_grp/bursar_name", "label": ["Name of bursar"]},
+    {"type": "text", "name": "bursar_contact", "$xpath": "school_info_grp/bursar_contact", "label": ["Contact of bursar"]},
+    {"type": "select_one", "name": "year", "$xpath": "period_grp/year", "label": ["Select year"], "select_from_list_name": "years"},
+    {"type": "select_one", "name": "term", "$xpath": "period_grp/term", "label": ["Select term"], "select_from_list_name": "terms"},
+    {"type": "date", "name": "completion_date", "$xpath": "period_grp/completion_date", "label": ["Completion date"]},
+    {"type": "integer", "name": "total_school_enroll", "$xpath": "enrol_grp/total_school_enroll", "label": ["Total school enrollment"]},
+    {"type": "integer", "name": "total_boarders", "$xpath": "enrol_grp/total_boarders", "label": ["Total boarders"]},
+    {"type": "calculate", "name": "calc_total_day", "$xpath": "enrol_grp/calc_total_day"},
+    {"type": "date", "name": "first_insession_date", "$xpath": "enrol_grp/first_insession_date", "label": ["First in-session date"]},
+    {"type": "date", "name": "last_insession_date", "$xpath": "enrol_grp/last_insession_date", "label": ["Last in-session date"]},
+    {"type": "calculate", "name": "calc_insession_days", "$xpath": "enrol_grp/calc_insession_days"},
+    {"type": "select_one", "name": "chk_rdt_tests", "$xpath": "rdt_grp/chk_rdt_tests", "label": ["Does the school test for malaria using RDT?"], **_yn},
+    {"type": "integer", "name": "rdt_qty", "$xpath": "rdt_grp/rdt_qty", "label": ["RDTs procured by the school (units)"]},
+    {"type": "select_multiple", "name": "rdt_type", "$xpath": "rdt_grp/rdt_type", "label": ["RDT brand / type"], "select_from_list_name": "rdts"},
+    {"type": "select_one", "name": "rdt_unit", "$xpath": "rdt_grp/rdt_unit", "label": ["RDT unit"], "select_from_list_name": "rdt_unit_list"},
+    {"type": "integer", "name": "rdt_unitcost", "$xpath": "rdt_grp/rdt_unitcost", "label": ["RDT unit cost (UGX)"]},
+    {"type": "select_one", "name": "prev_rdt_stock", "$xpath": "rdt_grp/prev_rdt_stock", "label": ["Any RDT from previous procurement carried forward?"], **_yn},
+    {"type": "integer", "name": "prev_rdt_qty", "$xpath": "rdt_grp/prev_rdt_qty", "label": ["RDT (unit) balance carried forward"]},
+    {"type": "select_one", "name": "chk_other_testing_costs", "$xpath": "rdt_grp/chk_other_testing_costs", "label": ["Any other cost related to testing for malaria?"], **_yn},
+    {"type": "text", "name": "other_testing_items", "$xpath": "rdt_grp/other_testing_items", "label": ["List other testing items/consumables"]},
+    {"type": "integer", "name": "other_testing_costs", "$xpath": "rdt_grp/other_testing_costs", "label": ["Other additional testing costs"]},
+    {"type": "integer", "name": "act_qty", "$xpath": "act_grp/act_qty", "label": ["ACT procured by the school (units)"]},
+    {"type": "select_multiple", "name": "act_brand_type", "$xpath": "act_grp/act_brand_type", "label": ["ACT brand / type"], "select_from_list_name": "acts"},
+    {"type": "select_one", "name": "act_unit", "$xpath": "act_grp/act_unit", "label": ["ACT unit"], "select_from_list_name": "act_unit_list"},
+    {"type": "integer", "name": "act_unitcost", "$xpath": "act_grp/act_unitcost", "label": ["ACT unit cost (UGX)"]},
+    {"type": "select_one", "name": "prev_act_stock", "$xpath": "act_grp/prev_act_stock", "label": ["Any ACT from previous procurement carried forward?"], **_yn},
+    {"type": "integer", "name": "prev_act_qty", "$xpath": "act_grp/prev_act_qty", "label": ["ACT (unit) balance carried forward"]},
+    {"type": "select_one", "name": "chk_severe_mgt", "$xpath": "severe_grp/chk_severe_mgt", "label": ["Does the school manage severe / complicated malaria?"], **_yn},
+    {"type": "integer", "name": "artesunate_qty", "$xpath": "severe_grp/artesunate_qty", "label": ["IV Artesunate (unit)"]},
+    {"type": "integer", "name": "artesunate_unitcost", "$xpath": "severe_grp/artesunate_unitcost", "label": ["IV Artesunate unit cost (UGX)"]},
+    {"type": "text", "name": "other_malaria_tx_items", "$xpath": "severe_grp/other_malaria_tx_items", "label": ["Other malaria treatment items"]},
+    {"type": "integer", "name": "other_malaria_tx_costs", "$xpath": "severe_grp/other_malaria_tx_costs", "label": ["Other additional malaria treatment costs"]},
+    {"type": "select_one", "name": "respond_attestation", "$xpath": "sign_grp/respond_attestation", "label": ["Respondent attestation"], **_yn},
+    {"type": "date", "name": "attestation_date", "$xpath": "sign_grp/attestation_date", "label": ["Respondent attestation date"]},
+    {"type": "select_one", "name": "data_officer", "$xpath": "sign_grp/data_officer", "label": ["Select your data officer"], "select_from_list_name": "officers"},
 ]
 CHOICES = (choices_schools()
-           + [{"list_name": "sex", "name": "m", "label": ["Male"]}, {"list_name": "sex", "name": "f", "label": ["Female"]}]
-           + [{"list_name": "results", "name": r, "label": [l]} for r, l in (("pos", "Positive"), ("neg", "Negative"), ("nd", "Not done"))]
+           + [{"list_name": "rdt_unit_list", "name": "kits", "label": ["KITS"]}, {"list_name": "act_unit_list", "name": "doses", "label": ["DOSES"]}, {"list_name": "terms", "name": "t3", "label": ["Term 3"]}]
            + [{"list_name": "yn", "name": "yes", "label": ["Yes"]}, {"list_name": "yn", "name": "no", "label": ["No"]}]
            + [{"list_name": "officers", "name": o.lower(), "label": [o]} for o in OFFICERS]
            + [{"list_name": "years", "name": "2026", "label": ["2026"]}, {"list_name": "terms", "name": "t1", "label": ["Term 1"]}, {"list_name": "terms", "name": "t2", "label": ["Term 2"]}]
@@ -315,40 +362,54 @@ def build():
         data["DP"].append({**base, "_id": sid, "_uuid": f"dp-{sid}", "_submission_time": ts(t), "start": t.isoformat(), "end": (t + timedelta(minutes=5)).isoformat(),
                            "meeting_info_grp/district": d, "meeting_info_grp/district_code": "01", "meeting_info_grp/list_schools_obtained": "yes",
                            "meeting_info_grp/entry_meeting_date": "2026-10-20", "meeting_info_grp/deo_name": "DEO PERSON", "meeting_info_grp/deo_contact": "0788000000"})
-    # NL: per-visit nurse log entries over the last 6 weeks for ~70% of recruited schools (one school
-    # stops reporting; one has a code not on the roster)
+    # NL: weekly nurse-log summaries for ~70% of recruited schools over the last 7 weeks (one school stops
+    # reporting, a few weeks are missed, a few are submitted twice, one code is not on the roster)
     logging = random.sample(recruited, int(len(recruited) * 0.7))
     today = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    monday = today - timedelta(days=today.weekday())
     for si, s in enumerate(logging + [{"code": "SCH999", "name": "UNKNOWN SS", "district": "LUWERO", "region": "BUGANDA"}]):
-        rate = random.uniform(0.3, 4)
-        for day in range(42):
-            d = today - timedelta(days=41 - day)
-            if si == 0 and day > 20:
+        base = random.uniform(2, 40)
+        for wk in range(7):
+            ws = monday - timedelta(days=7 * (6 - wk))
+            if (si == 0 and wk > 3) or random.random() < 0.12:
                 continue
-            for _ in range(int(random.expovariate(1 / rate))):
+            for copy in range(2 if random.random() < 0.05 else 1):
                 sid += 1
-                tested = random.random() < 0.85
-                res = "nd" if not tested else ("pos" if random.random() < 0.45 else "neg")
-                data["NL"].append({"_id": sid, "_uuid": f"nl-{sid}", "_submission_time": ts(d + timedelta(hours=random.randint(8, 17))), "_submitted_by": "nurse",
-                                   "start": d.isoformat(), "end": (d + timedelta(minutes=3)).isoformat(),
-                                   "log_info_grp/school_code": s["code"], "log_info_grp/school_name": s["name"], "log_info_grp/visit_date": d.date().isoformat(),
-                                   "patient_grp/student_name": "STUDENT X", "patient_grp/sex": random.choice(["m", "f"]), "patient_grp/age": random.randint(12, 19),
-                                   "patient_grp/boarder": random.choice(["yes", "yes", "no"]), "malaria_grp/rdt_done": "yes" if tested else "no", "malaria_grp/rdt_result": res,
-                                   "malaria_grp/act_given": "yes" if res == "pos" else "no", "malaria_grp/severe_case": "yes" if res == "pos" and random.random() < 0.05 else "no",
-                                   "malaria_grp/referred": "yes" if random.random() < 0.03 else "no", "malaria_grp/notes": "", "_attachments": [], "_geolocation": [None, None]})
-    # BL: weekly bursar entries for ~60% of recruited schools
+                cb, cd = int(random.expovariate(1 / base)), int(random.expovariate(1 / (base / 3)))
+                kb, kd = int(cb * random.uniform(0.6, 1)), int(cd * random.uniform(0.6, 1))
+                sev = random.randint(0, 2) if kb + kd > 5 else 0
+                data["NL"].append({"_id": sid, "_uuid": f"nl-{sid}", "_submission_time": ts(ws + timedelta(days=5 + copy, hours=10)), "_submitted_by": "nurse",
+                                   "start": ws.isoformat(), "end": (ws + timedelta(minutes=6)).isoformat(),
+                                   "school_info_grp/school_code": s["code"], "school_info_grp/school_name": s["name"], "school_info_grp/district": s["district"],
+                                   "school_info_grp/nurse_name": "NURSE Z", "school_info_grp/nurse_contact": "0770000000",
+                                   "period_grp/year": "2026", "period_grp/term": "t3", "period_grp/week_start_date": ws.date().isoformat(), "period_grp/week_end_date": (ws + timedelta(days=6)).date().isoformat(),
+                                   "cases_grp/total_cases_boarders": cb, "cases_grp/confirmed_boarders": kb, "cases_grp/total_cases_day": cd, "cases_grp/confirmed_day": kd,
+                                   "cases_grp/val_confirmed_cases_boarders": "1", "cases_grp/total_severe_cases": sev, "cases_grp/severe_cases_boarders": min(sev, kb),
+                                   "supplies_grp/chk_mal_tests_treat": "yes", "supplies_grp/rdt_used": cb + cd + random.randint(0, 10), "supplies_grp/acts_used": kb + kd,
+                                   "supplies_grp/artesunate_used": sev * 3, "supplies_grp/rdt_stock": "yes" if random.random() < 0.08 else "no", "supplies_grp/act_stock": "yes" if random.random() < 0.05 else "no",
+                                   "supplies_grp/notified_stockout": "no", "absent_grp/chk_calibration_cohort_school": "yes" if si % 5 == 0 else "no",
+                                   "absent_grp/ord_casedayslost_boarders": kb * 2, "absent_grp/ord_casedayslost_day": kd * 2, "absent_grp/sev_casedayslost_boarders": sev * 5, "absent_grp/sev_casedayslost_day": 0,
+                                   "sign_grp/respond_attestation": "yes", "sign_grp/attestation_date": (ws + timedelta(days=5)).date().isoformat(), "sign_grp/data_officer": random.choice(OFFICERS).lower(),
+                                   "_attachments": [], "_geolocation": [None, None]})
+    # BL: termly bursar summaries for ~60% of recruited schools — Term 2 for most, Term 3 for a third
     for s in random.sample(recruited, int(len(recruited) * 0.6)):
-        for wk in range(6):
-            d = today - timedelta(days=today.weekday() + 7 * (5 - wk))
-            if random.random() < 0.15:
-                continue
+        for tm in (["t2"] + (["t3"] if random.random() < 0.35 else [])):
             sid += 1
-            data["BL"].append({"_id": sid, "_uuid": f"bl-{sid}", "_submission_time": ts(d + timedelta(days=4, hours=12)), "_submitted_by": "bursar",
-                               "start": d.isoformat(), "end": (d + timedelta(minutes=4)).isoformat(),
-                               "log_info_grp/school_code": s["code"], "log_info_grp/week_start_date": d.date().isoformat(),
-                               "weekly_grp/boarders_present": random.randint(250, 1200), "weekly_grp/students_absent_illness": random.randint(0, 40),
-                               "weekly_grp/students_sent_home": random.randint(0, 8), "weekly_grp/sickbay_admissions": random.randint(0, 25),
-                               "weekly_grp/malaria_expenditure_ugx": random.choice([0, 0, 50000, 120000, 300000, 850000]), "weekly_grp/bursar_name": "BURSAR Y",
+            enrol = random.randint(300, 1500); d = datetime(2026, 8, 14 if tm == "t2" else 10, tzinfo=timezone.utc) + timedelta(days=random.randint(0, 20))
+            rq, aq, art = random.randint(2, 30), random.randint(20, 400), random.randint(0, 20)
+            data["BL"].append({"_id": sid, "_uuid": f"bl-{sid}", "_submission_time": ts(d + timedelta(hours=12)), "_submitted_by": "bursar",
+                               "start": d.isoformat(), "end": (d + timedelta(minutes=9)).isoformat(),
+                               "school_info_grp/school_code": s["code"], "school_info_grp/school_name": s["name"], "school_info_grp/bursar_name": "BURSAR Y", "school_info_grp/bursar_contact": "0780000000",
+                               "period_grp/year": "2026", "period_grp/term": tm, "period_grp/completion_date": d.date().isoformat(),
+                               "enrol_grp/total_school_enroll": enrol, "enrol_grp/total_boarders": int(enrol * random.uniform(0.4, 0.95)), "enrol_grp/calc_total_day": "0",
+                               "enrol_grp/first_insession_date": "2026-05-25" if tm == "t2" else "2026-09-14", "enrol_grp/last_insession_date": "2026-08-21" if tm == "t2" else "2026-12-04", "enrol_grp/calc_insession_days": "88" if tm == "t2" else "81",
+                               "rdt_grp/chk_rdt_tests": "yes", "rdt_grp/rdt_qty": rq, "rdt_grp/rdt_type": random.choice(["bioline", "standard_q", "biocredit bioline"]), "rdt_grp/rdt_unit": "kits",
+                               "rdt_grp/rdt_unitcost": random.choice([25000, 30000, 45000]), "rdt_grp/prev_rdt_stock": "no", "rdt_grp/prev_rdt_qty": 0,
+                               "rdt_grp/chk_other_testing_costs": "yes" if random.random() < 0.3 else "no", "rdt_grp/other_testing_items": "gloves", "rdt_grp/other_testing_costs": random.choice([0, 0, 20000, 60000]),
+                               "act_grp/act_qty": aq, "act_grp/act_brand_type": random.choice(["coartem", "lonart", "lumartem lonart"]), "act_grp/act_unit": "doses", "act_grp/act_unitcost": random.choice([3500, 5000, 8000]),
+                               "act_grp/prev_act_stock": "no", "act_grp/prev_act_qty": 0, "severe_grp/chk_severe_mgt": "yes" if art else "no", "severe_grp/artesunate_qty": art, "severe_grp/artesunate_unitcost": 12000 if art else 0,
+                               "severe_grp/other_malaria_tx_items": "", "severe_grp/other_malaria_tx_costs": random.choice([0, 0, 0, 150000]),
+                               "sign_grp/respond_attestation": "yes", "sign_grp/attestation_date": d.date().isoformat(), "sign_grp/data_officer": random.choice(OFFICERS).lower(),
                                "_attachments": [], "_geolocation": [None, None]})
     for k in data:
         data[k].sort(key=lambda s: s["_id"])

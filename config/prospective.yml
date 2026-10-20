@@ -1,67 +1,101 @@
 # Prospective log forms (filled in continuously by school nurses and bursars) and how the
-# dashboard reads them. Each form is reduced to ONE ROW PER SCHOOL PER ISO WEEK before it is
-# published: number of entries, the sum of every numeric question and the count of every
-# answer to every choice question. Individual log entries never leave the GitHub runner.
+# dashboard reads them. Each form is reduced to ONE ROW PER SCHOOL PER PERIOD (ISO week or
+# school term) before it is published: number of entries, the sum of every numeric question
+# and the count of every answer to every choice question. Individual entries never leave the
+# GitHub runner.
 #
-# Roles name the questions the Prospective page uses for its tiles and charts. Leave a role
-# blank to let the pipeline auto-detect it from the question names (patterns under `auto`,
-# tried in order); fill it in to pin it. A role is either
-#   - a NUMERIC question, summed:                 "num_rdt_positive"
-#   - a CHOICE question + the answers that count: "rdt_result = positive"   (regex, case-insensitive)
-# Questions inside repeat groups (one row per patient, say) are found automatically.
-# The resolved roles are written to site/data/prospective.json and shown on the page, so a
-# wrong auto-detection is visible and can be pinned here.
+# Roles name the questions the Prospective page uses for its tiles and charts. A role is
+#   - a NUMERIC question or expression, summed over entries:   "rdt_used"
+#        expressions may add and multiply questions:          "confirmed_boarders + confirmed_day"
+#                                                              "rdt_qty * rdt_unitcost + act_qty * act_unitcost"
+#   - a CHOICE question + the answers that count:              "rdt_stock = ^yes"   (regex, case-insensitive)
+# Leave a role blank to auto-detect it from question names (patterns under `auto`, tried in
+# order). The resolved roles are published and shown on the page's Data notes, so a wrong
+# guess is visible and can be pinned here. Question names come from state/forms_schema.json.
 
 forms:
   - key: nurse_log
     title: "Nurse log"
+    period: week                 # one entry per school per week (week_start_date)
+    one_per_period: true         # several submissions for the same school-week → keep the latest, count the rest as duplicates
     roles:
-      school_code: ""        # auto: a question named like school_code
-      school_name: ""        # fallback join when there is no code
-      date: ""               # the day/week the entry refers to; auto: first date question, else submission time
-      seen: ""               # students seen / consultations
-      tested: ""             # RDTs done
-      positive: ""           # RDT positive / confirmed malaria
-      treated: ""            # ACT courses given
-      severe: ""             # severe cases
-      referred: ""           # referrals out
-    auto:
-      seen:     ["(student|pupil|patient|case|learner).*(seen|attend|visit|consult)", "(seen|visits|consultations|attendances)"]
-      tested:   ["rdt.*(done|perform|test|used|conduct|carried)", "(num|number|total|no)_?.*(rdt|test)", "tested", "rdt_?result = positive|negative", "(rdt_?done|tested|rdt_?performed) = ^yes"]
-      positive: ["(rdt|test|malaria).*positive", "positive", "confirmed", "(rdt_?result|result|test_?result) = positive"]
-      treated:  ["act.*(given|used|dispens|issued|administ|course)", "(num|number|total).*(treat|act)", "treated", "(treat|act_?given|drug) = ^yes|act|artemether|coartem|lumefantrine"]
-      severe:   ["severe", "severe = ^yes"]
-      referred: ["refer", "refer = ^yes"]
+      school_code: school_code
+      date: week_start_date
+      cases: "total_cases_boarders + total_cases_day"
+      cases_boarders: total_cases_boarders
+      confirmed: "confirmed_boarders + confirmed_day"
+      confirmed_boarders: confirmed_boarders
+      severe: total_severe_cases
+      severe_boarders: severe_cases_boarders
+      tested: rdt_used
+      treated: acts_used
+      artesunate: artesunate_used
+      days_lost: "ord_casedayslost_boarders + ord_casedayslost_day + sev_casedayslost_boarders + sev_casedayslost_day"
+      days_lost_boarders: "ord_casedayslost_boarders + sev_casedayslost_boarders"
+      rdt_stockout: "rdt_stock = ^yes"
+      act_stockout: "act_stock = ^yes"
     labels:
-      seen: "Students seen"
-      tested: "RDTs done"
-      positive: "RDT positive"
-      treated: "ACT given"
+      cases: "Malaria cases (all)"
+      cases_boarders: "Cases — boarders"
+      confirmed: "Confirmed cases"
+      confirmed_boarders: "Confirmed — boarders"
       severe: "Severe cases"
-      referred: "Referred"
+      severe_boarders: "Severe — boarders"
+      tested: "RDTs used"
+      treated: "ACTs used"
+      artesunate: "IV artesunate vials"
+      days_lost: "School days lost"
+      days_lost_boarders: "Days lost — boarders"
+      rdt_stockout: "School-weeks with RDT stockout"
+      act_stockout: "School-weeks with ACT stockout"
+    ratios:                      # numerator ÷ denominator of the period totals (sums, whatever `stats` says)
+      positivity: { num: confirmed, den: tested, label: "Positivity", note: "confirmed ÷ RDTs used", fmt: pct }
+      confirmed_share: { num: confirmed, den: cases, label: "Confirmed share of cases", note: "confirmed ÷ all cases", fmt: pct }
+      severe_share: { num: severe, den: confirmed, label: "Severe share", note: "severe ÷ confirmed", fmt: pct }
+    chart: [cases, confirmed, severe, tested]       # roles on the "by week" line chart
+    per_1000:                    # incidence using each school's latest Annex H head-count as the denominator (enrol | boarders)
+      incidence: { num: confirmed, den: enrol, label: "Confirmed per 1,000 students per week" }
+      incidence_boarders: { num: confirmed_boarders, den: boarders, label: "Confirmed per 1,000 boarders per week" }
 
   - key: bursar_log
     title: "Bursar log"
+    period: term                 # one entry per school per term (year + term questions)
+    one_per_period: true
     roles:
-      school_code: ""
-      school_name: ""
-      date: ""
-      boarders: ""           # boarders present / in residence
-      absent: ""             # students absent (illness)
-      sent_home: ""          # students sent home sick
-      admitted: ""           # sick-bay admissions
-      expenditure: ""        # malaria-related spending (UGX)
-    auto:
-      boarders:    ["boarder", "(students|pupils|learners).*(present|resident|in_?school)"]
-      absent:      ["absent", "absence", "missed"]
-      sent_home:   ["sent_?home", "home.*(sick|ill)", "discharg"]
-      admitted:    ["admit", "sick_?bay", "sickbay"]
-      expenditure: ["expend", "spent", "cost", "ugx", "amount", "expense", "purchase"]
-    stats:                 # how to combine school-weeks: sum (default) or mean per school-week — for stocks like head-counts
+      school_code: school_code
+      date: completion_date
+      enrolment: total_school_enroll
+      boarders: total_boarders
+      insession_days: calc_insession_days
+      rdt_procured: rdt_qty
+      rdt_cost: "rdt_qty * rdt_unitcost"
+      act_procured: act_qty
+      act_cost: "act_qty * act_unitcost"
+      artesunate_procured: artesunate_qty
+      artesunate_cost: "artesunate_qty * artesunate_unitcost"
+      other_costs: "other_testing_costs + other_malaria_tx_costs"
+      total_cost: "rdt_qty * rdt_unitcost + act_qty * act_unitcost + artesunate_qty * artesunate_unitcost + other_testing_costs + other_malaria_tx_costs"
+      tests_in_school: "chk_rdt_tests = ^yes"
+      manages_severe: "chk_severe_mgt = ^yes"
+    stats:                       # sum (default) or mean per school-period — for stocks such as head-counts
+      enrolment: mean
       boarders: mean
+      insession_days: mean
     labels:
-      boarders: "Boarders present"
-      absent: "Absent (illness)"
-      sent_home: "Sent home sick"
-      admitted: "Sick-bay admissions"
-      expenditure: "Malaria spending (UGX)"
+      enrolment: "Enrolment"
+      boarders: "Boarders"
+      insession_days: "In-session days"
+      rdt_procured: "RDT kits procured"
+      rdt_cost: "RDT spend (UGX)"
+      act_procured: "ACT doses procured"
+      act_cost: "ACT spend (UGX)"
+      artesunate_procured: "IV artesunate procured"
+      artesunate_cost: "Artesunate spend (UGX)"
+      other_costs: "Other testing & treatment costs (UGX)"
+      total_cost: "Total malaria spend (UGX)"
+      tests_in_school: "Schools testing with RDT"
+      manages_severe: "Schools managing severe cases"
+    ratios:
+      cost_per_student: { num: total_cost, den: enrolment, label: "Spend per student per term (UGX)", note: "total spend ÷ enrolment", fmt: num }
+      cost_per_boarder: { num: total_cost, den: boarders, label: "Spend per boarder per term (UGX)", note: "total spend ÷ boarders", fmt: num }
+    chart: [total_cost, rdt_cost, act_cost]
