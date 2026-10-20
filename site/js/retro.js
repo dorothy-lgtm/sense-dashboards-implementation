@@ -47,7 +47,10 @@
         <div class="card"><h3>Enrolment and boarders by district <span class="sub">Average per school per term · enrolment = all students</span></h3>
           ${barList(dist.filter(d => isNum(d.enrol)).sort((a, b) => b.enrol - a.enrol).map(d => ({ label: d.district, value: d.enrol, color: "var(--series-3)", note: `· boarders ${num(Math.round(d.boarders ?? 0))}` })))}</div>
       </div>
+      <div class="card" style="margin-top:12px"><h3>Between-school variation (for sample-size work) <span class="sub">Per-school incidence pooled over the selected terms. CV = SD ÷ mean of school rates; k = CV after removing Poisson noise (Hayes &amp; Moulton); SD(log) = SD of log rates. "Clean" excludes records failing the consistency checks (severe &gt; confirmed, confirmed &gt; all cases)</span></h3>
+        <div id="retro-cv"></div></div>
       <div class="card" style="margin-top:12px"><h3>School-term records <span class="sub">Click a column heading to sort</span></h3><div class="scroll" id="retro-table"></div></div>`;
+    renderCV(schools, allRecs);
 
     sortableTable($("#retro-table"), [
       { key: "school", label: "School" }, { key: "district", label: "District" }, { key: "term", label: "Term" },
@@ -60,6 +63,43 @@
       cases: r[F.cases] ?? null, confirmed: r[F.confirmed] ?? null, severe: r[F.severe] ?? null, rdt: r[F.rdt] ?? null, act: r[F.act] ?? null,
       positivity: isNum(r[F.confirmed]) && isNum(r[F.rdt]) && r[F.rdt] > 0 ? r[F.confirmed] / r[F.rdt] : null,
     })), { sortKey: "school" });
+  }
+  const isFlagged = r => (isNum(r[F.severe]) && isNum(r[F.confirmed]) && r[F.severe] > r[F.confirmed]) || (isNum(r[F.confirmed]) && isNum(r[F.cases]) && r[F.confirmed] > r[F.cases]) || (isNum(r[F.severe]) && r[F.severe] > 0 && !r[F.confirmed]);
+  function cvStats(rows, numKey, denKey) {
+    const per = new Map();
+    rows.forEach(r => { const n = r[numKey], d = r[denKey]; if (isNum(n) && isNum(d) && d > 0) { const p = per.get(r._school.code) || [0, 0]; p[0] += n; p[1] += d; per.set(r._school.code, p); } });
+    const rates = [...per.values()].map(([n, d]) => n / d), pt = [...per.values()].map(([, d]) => d);
+    if (rates.length < 3) return null;
+    const m = mean(rates), sd = Math.sqrt(sum(rates.map(x => (x - m) ** 2)) / (rates.length - 1));
+    const pois = mean(pt.map(d => m / d));
+    const k = Math.sqrt(Math.max(0, sd * sd - pois)) / m;
+    const logs = rates.filter(x => x > 0).map(Math.log), ml = mean(logs), sdl = logs.length > 2 ? Math.sqrt(sum(logs.map(x => (x - ml) ** 2)) / (logs.length - 1)) : null;
+    return { n: rates.length, mean: m, cv: sd / m, k, sdlog: sdl };
+  }
+  function pearson(a, b) { const ma = mean(a), mb = mean(b); const num = sum(a.map((x, i) => (x - ma) * (b[i] - mb))); const den = Math.sqrt(sum(a.map(x => (x - ma) ** 2)) * sum(b.map(y => (y - mb) ** 2))); return den ? num / den : null; }
+  function renderCV(schools, allRecs) {
+    const el = $("#retro-cv");
+    const recs = schools.flatMap(s => termRows(s).map(r => ({ ...r, _school: s })));
+    const clean = recs.filter(r => !isFlagged(r));
+    const f2 = v => isNum(v) ? (Math.round(v * 100) / 100).toFixed(2) : "—";
+    const row = (label, st) => st ? [label, num(st.n), num(Math.round(1000 * st.mean * 10) / 10), f2(st.cv), f2(st.k), f2(st.sdlog)] : [label, "—", "—", "—", "—", "—"];
+    const specs = [["Confirmed cases per student", F.confirmed, F.enrol], ["All malaria cases per student", F.cases, F.enrol], ["Confirmed cases per boarder", F.confirmed, F.boarders], ["Severe cases per student", F.severe, F.enrol]];
+    const rowsAll = specs.map(([l, n, d]) => row(l, cvStats(recs, n, d))), rowsClean = specs.map(([l, n, d]) => row(l + " (clean)", cvStats(clean, n, d)));
+    // predictive value of baseline: correlation of per-school confirmed incidence between the two most recent terms
+    const terms = [...new Set(allRecs.map(termKey))].filter(Boolean).sort();
+    let corrLine = "";
+    if (terms.length >= 2) {
+      const [t1, t2] = terms.slice(-2);
+      const byS = new Map();
+      allRecs.forEach(r => { const n = r[F.confirmed], d = r[F.enrol]; if (isNum(n) && isNum(d) && d > 0) { const o = byS.get(r._school.code) || {}; o[termKey(r)] = n / d; byS.set(r._school.code, o); } });
+      const pairs = [...byS.values()].filter(o => isNum(o[t1]) && isNum(o[t2]));
+      if (pairs.length >= 5) {
+        const rr = pearson(pairs.map(o => o[t1]), pairs.map(o => o[t2]));
+        const kAll = cvStats(recs, F.confirmed, F.enrol);
+        corrLine = `<p class="meta">Baseline predictiveness: per-school confirmed incidence in ${esc(t1)} vs ${esc(t2)} correlates at r = ${f2(rr)} (${num(pairs.length)} schools). Adjusting the analysis for baseline incidence would reduce the effective k from about ${f2(kAll?.k)} to roughly k·√(1−r²) ≈ ${f2(kAll && rr !== null ? kAll.k * Math.sqrt(1 - rr * rr) : null)}.</p>`;
+      }
+    }
+    el.innerHTML = table([{t:"Rate"},{t:"Schools",num:true},{t:"Mean per 1,000 per term",num:true},{t:"CV (observed)",num:true},{t:"k (Poisson-corrected)",num:true},{t:"SD of log rate",num:true}], rowsAll.concat(rowsClean)) + corrLine;
   }
   PAGES.retro = { title: "Retrospective", render, filters: true };
 })();
