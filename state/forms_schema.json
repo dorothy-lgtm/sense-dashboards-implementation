@@ -1,0 +1,2589 @@
+{
+ "generated_at": "2026-10-20T14:16:48.360065+00:00",
+ "forms": {
+  "enrolment": {
+   "name": "Annex F — School Enrolment CRF (Form A)",
+   "uid": "ak95trCoSBkM3aKqZysbdB",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "atleast_300_boarders",
+     "xpath": "School_screening_grp/atleast_300_boarders",
+     "type": "select_one",
+     "label": "≥300 boarders",
+     "repeat": ""
+    },
+    {
+     "name": "overall_status",
+     "xpath": "School_screening_grp/overall_status",
+     "type": "calculate",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "school_code",
+     "xpath": "School_Identification_grp/school_code",
+     "type": "select_one",
+     "label": "School code",
+     "repeat": ""
+    },
+    {
+     "name": "school_name",
+     "xpath": "School_Identification_grp/school_name",
+     "type": "text",
+     "label": "Name of the school",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "School_Identification_grp/district",
+     "type": "text",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "region",
+     "xpath": "School_Identification_grp/region",
+     "type": "text",
+     "label": "Region",
+     "repeat": ""
+    },
+    {
+     "name": "enrollment_date",
+     "xpath": "School_Identification_grp/enrollment_date",
+     "type": "date",
+     "label": "Date of enrolment visit",
+     "repeat": ""
+    },
+    {
+     "name": "geo_location",
+     "xpath": "School_Identification_grp/geo_location",
+     "type": "geopoint",
+     "label": "GPS",
+     "repeat": ""
+    },
+    {
+     "name": "nurse_name",
+     "xpath": "school_health_personnel_grp/nurse_name",
+     "type": "text",
+     "label": "Nurse",
+     "repeat": ""
+    },
+    {
+     "name": "nurse_contact",
+     "xpath": "school_health_personnel_grp/nurse_contact",
+     "type": "text",
+     "label": "Nurse phone",
+     "repeat": ""
+    },
+    {
+     "name": "nurse_qualification",
+     "xpath": "school_health_personnel_grp/nurse_qualification",
+     "type": "select_one",
+     "label": "Nurse qualification",
+     "repeat": ""
+    },
+    {
+     "name": "dedicated_sickbay",
+     "xpath": "school_health_personnel_grp/dedicated_sickbay",
+     "type": "select_one",
+     "label": "Dedicated sick bay",
+     "repeat": ""
+    },
+    {
+     "name": "test_supplies",
+     "xpath": "malaria_diagnostic_procedure_grp/test_supplies",
+     "type": "select_multiple",
+     "label": "Testing supplies",
+     "repeat": ""
+    },
+    {
+     "name": "school_type",
+     "xpath": "School_Identification_grp/school_type",
+     "type": "select_one",
+     "label": "School type",
+     "repeat": ""
+    },
+    {
+     "name": "nurse_working_days",
+     "xpath": "school_health_personnel_grp/nurse_working_days",
+     "type": "select_multiple",
+     "label": "Working days",
+     "repeat": ""
+    },
+    {
+     "name": "nurse_start_time",
+     "xpath": "school_health_personnel_grp/nurse_start_time",
+     "type": "time",
+     "label": "Start",
+     "repeat": ""
+    },
+    {
+     "name": "nurse_endtime_time",
+     "xpath": "school_health_personnel_grp/nurse_endtime_time",
+     "type": "time",
+     "label": "End",
+     "repeat": ""
+    },
+    {
+     "name": "cover_arrangement",
+     "xpath": "school_health_personnel_grp/cover_arrangement",
+     "type": "text",
+     "label": "Cover",
+     "repeat": ""
+    },
+    {
+     "name": "type_rdt_used",
+     "xpath": "malaria_diagnostic_procedure_grp/type_rdt_used",
+     "type": "select_multiple",
+     "label": "RDT type",
+     "repeat": ""
+    },
+    {
+     "name": "type_act_used",
+     "xpath": "malaria_diagnostic_procedure_grp/type_act_used",
+     "type": "select_multiple",
+     "label": "ACT type",
+     "repeat": ""
+    },
+    {
+     "name": "where_supplies_stored",
+     "xpath": "malaria_diagnostic_procedure_grp/where_supplies_stored",
+     "type": "select_one",
+     "label": "Stored",
+     "repeat": ""
+    },
+    {
+     "name": "notes_diagnostic_procedure",
+     "xpath": "malaria_diagnostic_procedure_grp/notes_diagnostic_procedure",
+     "type": "text",
+     "label": "Notes",
+     "repeat": ""
+    },
+    {
+     "name": "data_officer",
+     "xpath": "Respondent_signature_grp/data_officer",
+     "type": "select_one",
+     "label": "Data officer",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "structure_vector": {
+   "name": "Annex G — Structure, Prevention & Vector (Form B)",
+   "uid": "axDMBKEfMJYtZ5LiHqCMbb",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "school_code",
+     "xpath": "School_Identification_grp/school_code",
+     "type": "select_one",
+     "label": "School code",
+     "repeat": ""
+    },
+    {
+     "name": "school_name",
+     "xpath": "School_Identification_grp/school_name",
+     "type": "text",
+     "label": "Name",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "School_Identification_grp/district",
+     "type": "text",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "region",
+     "xpath": "School_Identification_grp/region",
+     "type": "text",
+     "label": "Region",
+     "repeat": ""
+    },
+    {
+     "name": "within_breeding_site",
+     "xpath": "school_physical_infrastructure_grp/within_breeding_site",
+     "type": "select_one",
+     "label": "Breeding sites within",
+     "repeat": ""
+    },
+    {
+     "name": "outside_breeding_site",
+     "xpath": "school_physical_infrastructure_grp/outside_breeding_site",
+     "type": "select_one",
+     "label": "Breeding sites outside",
+     "repeat": ""
+    },
+    {
+     "name": "open_containers",
+     "xpath": "school_physical_infrastructure_grp/open_containers",
+     "type": "select_one",
+     "label": "Open containers",
+     "repeat": ""
+    },
+    {
+     "name": "functional_drainage_sys",
+     "xpath": "school_physical_infrastructure_grp/functional_drainage_sys",
+     "type": "select_one",
+     "label": "Drainage",
+     "repeat": ""
+    },
+    {
+     "name": "total_dormitories",
+     "xpath": "physical_infrastructure_grp/total_dormitories",
+     "type": "integer",
+     "label": "Number of dormitories",
+     "repeat": ""
+    },
+    {
+     "name": "total_classrooms",
+     "xpath": "physical_infrastructure_grp/total_classrooms",
+     "type": "integer",
+     "label": "Number of classrooms",
+     "repeat": ""
+    },
+    {
+     "name": "total_quarters",
+     "xpath": "physical_infrastructure_grp/total_quarters",
+     "type": "integer",
+     "label": "Teachers quarters",
+     "repeat": ""
+    },
+    {
+     "name": "total_bathrooms",
+     "xpath": "physical_infrastructure_grp/total_bathrooms",
+     "type": "integer",
+     "label": "Bathrooms (stances)",
+     "repeat": ""
+    },
+    {
+     "name": "total_structures",
+     "xpath": "total_structures",
+     "type": "calculate",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "structure_category",
+     "xpath": "Classrooms_dormitories_grp/structure_category",
+     "type": "select_one",
+     "label": "Category",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "wall_material",
+     "xpath": "Classrooms_dormitories_grp/wall_material",
+     "type": "select_one",
+     "label": "Wall material",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "roof_material",
+     "xpath": "Classrooms_dormitories_grp/roof_material",
+     "type": "select_one",
+     "label": "Roof material",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "dormitory_capacity",
+     "xpath": "Classrooms_dormitories_grp/dormitory_capacity",
+     "type": "integer",
+     "label": "Dormitory capacity (beds)",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "presence_open_eaves",
+     "xpath": "Classrooms_dormitories_grp/presence_open_eaves",
+     "type": "select_one",
+     "label": "Open eaves",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "screened_windows",
+     "xpath": "Classrooms_dormitories_grp/screened_windows",
+     "type": "select_one",
+     "label": "Screened windows",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "bednets_hung",
+     "xpath": "Classrooms_dormitories_grp/bednets_hung",
+     "type": "select_one",
+     "label": "Bed nets hung",
+     "repeat": "Classrooms_dormitories_grp"
+    },
+    {
+     "name": "drainage_channel_end",
+     "xpath": "school_physical_infrastructure_grp/drainage_channel_end",
+     "type": "select_one",
+     "label": "Drain ends",
+     "repeat": ""
+    },
+    {
+     "name": "history_pesticide_use",
+     "xpath": "malaria_prevention_features_grp/history_pesticide_use",
+     "type": "select_one",
+     "label": "Pesticide history",
+     "repeat": ""
+    },
+    {
+     "name": "irs_history",
+     "xpath": "malaria_prevention_features_grp/irs_history",
+     "type": "select_one",
+     "label": "IRS history",
+     "repeat": ""
+    },
+    {
+     "name": "notes_general_observations",
+     "xpath": "Respondent_signature_grp/notes_general_observations",
+     "type": "text",
+     "label": "Notes",
+     "repeat": ""
+    },
+    {
+     "name": "data_officer",
+     "xpath": "Respondent_signature_grp/data_officer",
+     "type": "select_one",
+     "label": "Data officer",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "retrospective": {
+   "name": "Annex H — Retrospective Data",
+   "uid": "aokEegtT2X8oyCDfQCWeZR",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "school_code",
+     "xpath": "School_location_info_grp/school_code",
+     "type": "select_one",
+     "label": "School code",
+     "repeat": ""
+    },
+    {
+     "name": "school_name",
+     "xpath": "School_location_info_grp/school_name",
+     "type": "text",
+     "label": "Name",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "School_location_info_grp/district",
+     "type": "text",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "region",
+     "xpath": "School_location_info_grp/region",
+     "type": "text",
+     "label": "Region",
+     "repeat": ""
+    },
+    {
+     "name": "head_master",
+     "xpath": "School_location_info_grp/head_master",
+     "type": "text",
+     "label": "Head teacher",
+     "repeat": ""
+    },
+    {
+     "name": "hm_contact",
+     "xpath": "School_location_info_grp/hm_contact",
+     "type": "text",
+     "label": "HT contact",
+     "repeat": ""
+    },
+    {
+     "name": "completion_date",
+     "xpath": "School_location_info_grp/completion_date",
+     "type": "date",
+     "label": "Completion date",
+     "repeat": ""
+    },
+    {
+     "name": "year",
+     "xpath": "Enrollment_data_grp/year",
+     "type": "select_one",
+     "label": "Year",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "term",
+     "xpath": "Enrollment_data_grp/term",
+     "type": "select_one",
+     "label": "Term",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "total_school_enroll",
+     "xpath": "Enrollment_data_grp/total_school_enroll",
+     "type": "integer",
+     "label": "Total school enrollment",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "total_boarders",
+     "xpath": "Enrollment_data_grp/total_boarders",
+     "type": "integer",
+     "label": "Total boarders",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "total_malaria_cases",
+     "xpath": "Enrollment_data_grp/total_malaria_cases",
+     "type": "integer",
+     "label": "Total malaria cases",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "confirmed_malaria",
+     "xpath": "Enrollment_data_grp/confirmed_malaria",
+     "type": "integer",
+     "label": "Confirmed malaria cases",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "total_severe_cases",
+     "xpath": "Enrollment_data_grp/total_severe_cases",
+     "type": "integer",
+     "label": "Severe cases",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "total_rdt_used",
+     "xpath": "Enrollment_data_grp/total_rdt_used",
+     "type": "integer",
+     "label": "RDT used",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "total_act_used",
+     "xpath": "Enrollment_data_grp/total_act_used",
+     "type": "integer",
+     "label": "ACT used",
+     "repeat": "Enrollment_data_grp"
+    },
+    {
+     "name": "data_officer",
+     "xpath": "data_officer",
+     "type": "select_one",
+     "label": "Data officer",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "school_assessment": {
+   "name": "School Assessment Checklist",
+   "uid": "ajj7kZq2be5XDFSio3zJHu",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "region",
+     "xpath": "School_assessment_grp/region",
+     "type": "select_one",
+     "label": "Region",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "School_assessment_grp/district",
+     "type": "select_one",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "school_name",
+     "xpath": "School_assessment_grp/school_name",
+     "type": "text",
+     "label": "School Name",
+     "repeat": ""
+    },
+    {
+     "name": "visit_date",
+     "xpath": "School_assessment_grp/visit_date",
+     "type": "date",
+     "label": "Visit date",
+     "repeat": ""
+    },
+    {
+     "name": "springfiles_received",
+     "xpath": "School_assessment_grp/springfiles_received",
+     "type": "select_one",
+     "label": "Spring file",
+     "repeat": ""
+    },
+    {
+     "name": "consent_signed",
+     "xpath": "School_assessment_grp/consent_signed",
+     "type": "select_one",
+     "label": "Consent",
+     "repeat": ""
+    },
+    {
+     "name": "training_conducted",
+     "xpath": "School_assessment_grp/training_conducted",
+     "type": "select_one",
+     "label": "Training",
+     "repeat": ""
+    },
+    {
+     "name": "retros_data_collected",
+     "xpath": "School_assessment_grp/retros_data_collected",
+     "type": "select_one",
+     "label": "Retro data",
+     "repeat": ""
+    },
+    {
+     "name": "data_officer",
+     "xpath": "School_assessment_grp/data_officer",
+     "type": "select_one",
+     "label": "Data officer",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "district_meeting": {
+   "name": "District Entry Meeting Checklist",
+   "uid": "aGUvS64iEXZ6iANRKySPRT",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "School_location_info_grp/district",
+     "type": "select_one",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "district_code",
+     "xpath": "School_location_info_grp/district_code",
+     "type": "text",
+     "label": "District Code",
+     "repeat": ""
+    },
+    {
+     "name": "meeting_entry_date",
+     "xpath": "School_location_info_grp/meeting_entry_date",
+     "type": "date",
+     "label": "Entry meeting date",
+     "repeat": ""
+    },
+    {
+     "name": "mous_signed",
+     "xpath": "School_location_info_grp/mous_signed",
+     "type": "select_one",
+     "label": "MOU signed",
+     "repeat": ""
+    },
+    {
+     "name": "num_schools_attended",
+     "xpath": "School_location_info_grp/num_schools_attended",
+     "type": "integer",
+     "label": "Schools attended",
+     "repeat": ""
+    },
+    {
+     "name": "Entrant_Initials",
+     "xpath": "School_location_info_grp/Entrant_Initials",
+     "type": "select_one",
+     "label": "Initials",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "district_pre_entry": {
+   "name": "District Pre-Entry Meeting Checklist",
+   "uid": "a7MfPjqYzU6MVRefeukEpF",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "meeting_info_grp/district",
+     "type": "select_one",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "district_code",
+     "xpath": "meeting_info_grp/district_code",
+     "type": "text",
+     "label": "District Code",
+     "repeat": ""
+    },
+    {
+     "name": "num_schools_mobilized",
+     "xpath": "meeting_info_grp/num_schools_mobilized",
+     "type": "integer",
+     "label": "Target schools mobilized",
+     "repeat": ""
+    },
+    {
+     "name": "num_conf_attendance",
+     "xpath": "meeting_info_grp/num_conf_attendance",
+     "type": "integer",
+     "label": "Confirmed",
+     "repeat": ""
+    },
+    {
+     "name": "resched_meeting_date",
+     "xpath": "meeting_info_grp/resched_meeting_date",
+     "type": "date",
+     "label": "New date",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "district_entry_prep": {
+   "name": "District Entry Preparation Checklist",
+   "uid": "aUngKSUyshfP9f2ncmgpzF",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "district",
+     "xpath": "meeting_info_grp/district",
+     "type": "select_one",
+     "label": "District",
+     "repeat": ""
+    },
+    {
+     "name": "district_code",
+     "xpath": "meeting_info_grp/district_code",
+     "type": "text",
+     "label": "District Code",
+     "repeat": ""
+    },
+    {
+     "name": "list_schools_obtained",
+     "xpath": "meeting_info_grp/list_schools_obtained",
+     "type": "select_one",
+     "label": "List obtained",
+     "repeat": ""
+    },
+    {
+     "name": "entry_meeting_date",
+     "xpath": "meeting_info_grp/entry_meeting_date",
+     "type": "date",
+     "label": "Entry meeting date",
+     "repeat": ""
+    },
+    {
+     "name": "deo_name",
+     "xpath": "meeting_info_grp/deo_name",
+     "type": "text",
+     "label": "DEO name",
+     "repeat": ""
+    },
+    {
+     "name": "deo_contact",
+     "xpath": "meeting_info_grp/deo_contact",
+     "type": "text",
+     "label": "DEO phone",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "nurse_log": {
+   "name": "Nurse log (prospective)",
+   "uid": "anWs3BHcedteBeE4KVm2aY",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "school_code",
+     "xpath": "log_info_grp/school_code",
+     "type": "select_one",
+     "label": "School code",
+     "repeat": ""
+    },
+    {
+     "name": "school_name",
+     "xpath": "log_info_grp/school_name",
+     "type": "text",
+     "label": "School",
+     "repeat": ""
+    },
+    {
+     "name": "visit_date",
+     "xpath": "log_info_grp/visit_date",
+     "type": "date",
+     "label": "Date of visit",
+     "repeat": ""
+    },
+    {
+     "name": "student_name",
+     "xpath": "patient_grp/student_name",
+     "type": "text",
+     "label": "Student name",
+     "repeat": ""
+    },
+    {
+     "name": "sex",
+     "xpath": "patient_grp/sex",
+     "type": "select_one",
+     "label": "Sex",
+     "repeat": ""
+    },
+    {
+     "name": "age",
+     "xpath": "patient_grp/age",
+     "type": "integer",
+     "label": "Age",
+     "repeat": ""
+    },
+    {
+     "name": "boarder",
+     "xpath": "patient_grp/boarder",
+     "type": "select_one",
+     "label": "Boarder",
+     "repeat": ""
+    },
+    {
+     "name": "rdt_done",
+     "xpath": "malaria_grp/rdt_done",
+     "type": "select_one",
+     "label": "RDT done",
+     "repeat": ""
+    },
+    {
+     "name": "rdt_result",
+     "xpath": "malaria_grp/rdt_result",
+     "type": "select_one",
+     "label": "RDT result",
+     "repeat": ""
+    },
+    {
+     "name": "act_given",
+     "xpath": "malaria_grp/act_given",
+     "type": "select_one",
+     "label": "ACT given",
+     "repeat": ""
+    },
+    {
+     "name": "severe_case",
+     "xpath": "malaria_grp/severe_case",
+     "type": "select_one",
+     "label": "Severe malaria",
+     "repeat": ""
+    },
+    {
+     "name": "referred",
+     "xpath": "malaria_grp/referred",
+     "type": "select_one",
+     "label": "Referred",
+     "repeat": ""
+    },
+    {
+     "name": "notes",
+     "xpath": "malaria_grp/notes",
+     "type": "text",
+     "label": "Notes",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  },
+  "bursar_log": {
+   "name": "Bursar log (prospective)",
+   "uid": "aKHoLcChEGxRqCksRpadQN",
+   "questions": [
+    {
+     "name": "start",
+     "xpath": "start",
+     "type": "start",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "end",
+     "xpath": "end",
+     "type": "end",
+     "label": "",
+     "repeat": ""
+    },
+    {
+     "name": "school_code",
+     "xpath": "log_info_grp/school_code",
+     "type": "select_one",
+     "label": "School code",
+     "repeat": ""
+    },
+    {
+     "name": "week_start_date",
+     "xpath": "log_info_grp/week_start_date",
+     "type": "date",
+     "label": "Week starting",
+     "repeat": ""
+    },
+    {
+     "name": "boarders_present",
+     "xpath": "weekly_grp/boarders_present",
+     "type": "integer",
+     "label": "Boarders present this week",
+     "repeat": ""
+    },
+    {
+     "name": "students_absent_illness",
+     "xpath": "weekly_grp/students_absent_illness",
+     "type": "integer",
+     "label": "Students absent due to illness",
+     "repeat": ""
+    },
+    {
+     "name": "students_sent_home",
+     "xpath": "weekly_grp/students_sent_home",
+     "type": "integer",
+     "label": "Students sent home sick",
+     "repeat": ""
+    },
+    {
+     "name": "sickbay_admissions",
+     "xpath": "weekly_grp/sickbay_admissions",
+     "type": "integer",
+     "label": "Sick-bay admissions",
+     "repeat": ""
+    },
+    {
+     "name": "malaria_expenditure_ugx",
+     "xpath": "weekly_grp/malaria_expenditure_ugx",
+     "type": "integer",
+     "label": "Spent on malaria drugs/tests (UGX)",
+     "repeat": ""
+    },
+    {
+     "name": "bursar_name",
+     "xpath": "weekly_grp/bursar_name",
+     "type": "text",
+     "label": "Bursar",
+     "repeat": ""
+    }
+   ],
+   "choices": {
+    "schools": [
+     "SCH001",
+     "SCH002",
+     "SCH003",
+     "SCH004",
+     "SCH005",
+     "SCH006",
+     "SCH007",
+     "SCH008",
+     "SCH009",
+     "SCH010",
+     "SCH011",
+     "SCH012",
+     "SCH013",
+     "SCH014",
+     "SCH015",
+     "SCH016",
+     "SCH017",
+     "SCH018",
+     "SCH019",
+     "SCH020",
+     "SCH021",
+     "SCH022",
+     "SCH023",
+     "SCH024",
+     "SCH025",
+     "SCH026",
+     "SCH027",
+     "SCH028",
+     "SCH029",
+     "SCH030",
+     "SCH031",
+     "SCH032",
+     "SCH033",
+     "SCH034",
+     "SCH035",
+     "SCH036",
+     "SCH037",
+     "SCH038",
+     "SCH039",
+     "SCH040",
+     "SCH041",
+     "SCH042",
+     "SCH043",
+     "SCH044",
+     "SCH045",
+     "SCH046",
+     "SCH047",
+     "SCH048",
+     "SCH049",
+     "SCH050",
+     "SCH051",
+     "SCH052",
+     "SCH053",
+     "SCH054",
+     "SCH055",
+     "SCH056",
+     "SCH057",
+     "SCH058",
+     "SCH059",
+     "SCH060"
+    ],
+    "sex": [
+     "Male",
+     "Female"
+    ],
+    "results": [
+     "Positive",
+     "Negative",
+     "Not done"
+    ],
+    "yn": [
+     "Yes",
+     "No"
+    ],
+    "officers": [
+     "TE",
+     "BA",
+     "JK",
+     "RN",
+     "PO"
+    ],
+    "years": [
+     "2026"
+    ],
+    "terms": [
+     "Term 1",
+     "Term 2"
+    ],
+    "districts": [
+     "LUWERO",
+     "NAKASEKE",
+     "HOIMA",
+     "KAGADI",
+     "KIBAALE",
+     "KAKUMIRO",
+     "KIKUUBE",
+     "MASINDI",
+     "KIRYANDONGO",
+     "BULIISA",
+     "BUKEDEA",
+     "GULU CITY",
+     "KARENGA"
+    ],
+    "cats": [
+     "Dormitory",
+     "Classroom",
+     "Quarters"
+    ],
+    "walls": [
+     "Brick",
+     "Mud",
+     "Concrete"
+    ],
+    "roofs": [
+     "Iron_Sheets",
+     "Tiles",
+     "Thatch"
+    ],
+    "quals": [
+     "Enrolled_Nurse",
+     "Registered_Nurse",
+     "Nursing_Assistant"
+    ],
+    "supplies": [
+     "RDT",
+     "MICROSCOPY",
+     "NONE"
+    ],
+    "stypes": [
+     "Government",
+     "Private",
+     "Religious"
+    ],
+    "days": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "rdts": [
+     "Biocredit",
+     "Bioline",
+     "Standard Q",
+     "Other"
+    ],
+    "acts": [
+     "Lonart",
+     "Coartem",
+     "Lumartem",
+     "Other"
+    ],
+    "stores": [
+     "Nurse Office",
+     "Store Room",
+     "Head Office",
+     "Other"
+    ],
+    "drains": [
+     "On-site soak pit",
+     "Open drain leaving the compound",
+     "Other"
+    ],
+    "hist": [
+     "Within the last 12 months",
+     "More than 12 months ago",
+     "Never"
+    ],
+    "regions": [
+     "KARAMOJA",
+     "BUNYORO",
+     "ACHOLI",
+     "BUGANDA",
+     "TESO"
+    ]
+   }
+  }
+ }
+}

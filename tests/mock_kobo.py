@@ -18,7 +18,8 @@ from urllib.parse import parse_qs, urlparse
 random.seed(11)
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
 UIDS = {"F": "ak95trCoSBkM3aKqZysbdB", "G": "axDMBKEfMJYtZ5LiHqCMbb", "H": "aokEegtT2X8oyCDfQCWeZR", "A": "ajj7kZq2be5XDFSio3zJHu",
-        "DM": "aGUvS64iEXZ6iANRKySPRT", "DE": "a7MfPjqYzU6MVRefeukEpF", "DP": "aUngKSUyshfP9f2ncmgpzF"}
+        "DM": "aGUvS64iEXZ6iANRKySPRT", "DE": "a7MfPjqYzU6MVRefeukEpF", "DP": "aUngKSUyshfP9f2ncmgpzF",
+        "NL": "anWs3BHcedteBeE4KVm2aY", "BL": "aKHoLcChEGxRqCksRpadQN"}
 DISTRICTS = {"LUWERO": "BUGANDA", "NAKASEKE": "BUGANDA", "HOIMA": "BUNYORO", "KAGADI": "BUNYORO", "KIBAALE": "BUNYORO",
              "KAKUMIRO": "BUNYORO", "KIKUUBE": "BUNYORO", "MASINDI": "BUNYORO", "KIRYANDONGO": "BUNYORO",
              "BULIISA": "BUNYORO", "BUKEDEA": "TESO", "GULU CITY": "ACHOLI", "KARENGA": "KARAMOJA"}
@@ -176,7 +177,39 @@ SURVEYS["DP"] = [
     {"type": "text", "name": "deo_name", "$xpath": "meeting_info_grp/deo_name", "label": ["DEO name"]},
     {"type": "text", "name": "deo_contact", "$xpath": "meeting_info_grp/deo_contact", "label": ["DEO phone"]},
 ]
+# Prospective logs. The real forms were not inspected when this mock was written: the nurse log
+# is mocked as one submission per patient visit (repeat-free, with a free-text name that must
+# never be published) and the bursar log as one weekly summary per school.
+SURVEYS["NL"] = [
+    {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+    {"type": "select_one", "name": "school_code", "$xpath": "log_info_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
+    {"type": "text", "name": "school_name", "$xpath": "log_info_grp/school_name", "label": ["School"]},
+    {"type": "date", "name": "visit_date", "$xpath": "log_info_grp/visit_date", "label": ["Date of visit"]},
+    {"type": "text", "name": "student_name", "$xpath": "patient_grp/student_name", "label": ["Student name"]},
+    {"type": "select_one", "name": "sex", "$xpath": "patient_grp/sex", "label": ["Sex"], "select_from_list_name": "sex"},
+    {"type": "integer", "name": "age", "$xpath": "patient_grp/age", "label": ["Age"]},
+    {"type": "select_one", "name": "boarder", "$xpath": "patient_grp/boarder", "label": ["Boarder"], "select_from_list_name": "yn"},
+    {"type": "select_one", "name": "rdt_done", "$xpath": "malaria_grp/rdt_done", "label": ["RDT done"], "select_from_list_name": "yn"},
+    {"type": "select_one", "name": "rdt_result", "$xpath": "malaria_grp/rdt_result", "label": ["RDT result"], "select_from_list_name": "results"},
+    {"type": "select_one", "name": "act_given", "$xpath": "malaria_grp/act_given", "label": ["ACT given"], "select_from_list_name": "yn"},
+    {"type": "select_one", "name": "severe_case", "$xpath": "malaria_grp/severe_case", "label": ["Severe malaria"], "select_from_list_name": "yn"},
+    {"type": "select_one", "name": "referred", "$xpath": "malaria_grp/referred", "label": ["Referred"], "select_from_list_name": "yn"},
+    {"type": "text", "name": "notes", "$xpath": "malaria_grp/notes", "label": ["Notes"]},
+]
+SURVEYS["BL"] = [
+    {"type": "start", "name": "start", "$xpath": "start"}, {"type": "end", "name": "end", "$xpath": "end"},
+    {"type": "select_one", "name": "school_code", "$xpath": "log_info_grp/school_code", "label": ["School code"], "select_from_list_name": "schools"},
+    {"type": "date", "name": "week_start_date", "$xpath": "log_info_grp/week_start_date", "label": ["Week starting"]},
+    {"type": "integer", "name": "boarders_present", "$xpath": "weekly_grp/boarders_present", "label": ["Boarders present this week"]},
+    {"type": "integer", "name": "students_absent_illness", "$xpath": "weekly_grp/students_absent_illness", "label": ["Students absent due to illness"]},
+    {"type": "integer", "name": "students_sent_home", "$xpath": "weekly_grp/students_sent_home", "label": ["Students sent home sick"]},
+    {"type": "integer", "name": "sickbay_admissions", "$xpath": "weekly_grp/sickbay_admissions", "label": ["Sick-bay admissions"]},
+    {"type": "integer", "name": "malaria_expenditure_ugx", "$xpath": "weekly_grp/malaria_expenditure_ugx", "label": ["Spent on malaria drugs/tests (UGX)"]},
+    {"type": "text", "name": "bursar_name", "$xpath": "weekly_grp/bursar_name", "label": ["Bursar"]},
+]
 CHOICES = (choices_schools()
+           + [{"list_name": "sex", "name": "m", "label": ["Male"]}, {"list_name": "sex", "name": "f", "label": ["Female"]}]
+           + [{"list_name": "results", "name": r, "label": [l]} for r, l in (("pos", "Positive"), ("neg", "Negative"), ("nd", "Not done"))]
            + [{"list_name": "yn", "name": "yes", "label": ["Yes"]}, {"list_name": "yn", "name": "no", "label": ["No"]}]
            + [{"list_name": "officers", "name": o.lower(), "label": [o]} for o in OFFICERS]
            + [{"list_name": "years", "name": "2026", "label": ["2026"]}, {"list_name": "terms", "name": "t1", "label": ["Term 1"]}, {"list_name": "terms", "name": "t2", "label": ["Term 2"]}]
@@ -282,6 +315,41 @@ def build():
         data["DP"].append({**base, "_id": sid, "_uuid": f"dp-{sid}", "_submission_time": ts(t), "start": t.isoformat(), "end": (t + timedelta(minutes=5)).isoformat(),
                            "meeting_info_grp/district": d, "meeting_info_grp/district_code": "01", "meeting_info_grp/list_schools_obtained": "yes",
                            "meeting_info_grp/entry_meeting_date": "2026-10-20", "meeting_info_grp/deo_name": "DEO PERSON", "meeting_info_grp/deo_contact": "0788000000"})
+    # NL: per-visit nurse log entries over the last 6 weeks for ~70% of recruited schools (one school
+    # stops reporting; one has a code not on the roster)
+    logging = random.sample(recruited, int(len(recruited) * 0.7))
+    today = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    for si, s in enumerate(logging + [{"code": "SCH999", "name": "UNKNOWN SS", "district": "LUWERO", "region": "BUGANDA"}]):
+        rate = random.uniform(0.3, 4)
+        for day in range(42):
+            d = today - timedelta(days=41 - day)
+            if si == 0 and day > 20:
+                continue
+            for _ in range(int(random.expovariate(1 / rate))):
+                sid += 1
+                tested = random.random() < 0.85
+                res = "nd" if not tested else ("pos" if random.random() < 0.45 else "neg")
+                data["NL"].append({"_id": sid, "_uuid": f"nl-{sid}", "_submission_time": ts(d + timedelta(hours=random.randint(8, 17))), "_submitted_by": "nurse",
+                                   "start": d.isoformat(), "end": (d + timedelta(minutes=3)).isoformat(),
+                                   "log_info_grp/school_code": s["code"], "log_info_grp/school_name": s["name"], "log_info_grp/visit_date": d.date().isoformat(),
+                                   "patient_grp/student_name": "STUDENT X", "patient_grp/sex": random.choice(["m", "f"]), "patient_grp/age": random.randint(12, 19),
+                                   "patient_grp/boarder": random.choice(["yes", "yes", "no"]), "malaria_grp/rdt_done": "yes" if tested else "no", "malaria_grp/rdt_result": res,
+                                   "malaria_grp/act_given": "yes" if res == "pos" else "no", "malaria_grp/severe_case": "yes" if res == "pos" and random.random() < 0.05 else "no",
+                                   "malaria_grp/referred": "yes" if random.random() < 0.03 else "no", "malaria_grp/notes": "", "_attachments": [], "_geolocation": [None, None]})
+    # BL: weekly bursar entries for ~60% of recruited schools
+    for s in random.sample(recruited, int(len(recruited) * 0.6)):
+        for wk in range(6):
+            d = today - timedelta(days=today.weekday() + 7 * (5 - wk))
+            if random.random() < 0.15:
+                continue
+            sid += 1
+            data["BL"].append({"_id": sid, "_uuid": f"bl-{sid}", "_submission_time": ts(d + timedelta(days=4, hours=12)), "_submitted_by": "bursar",
+                               "start": d.isoformat(), "end": (d + timedelta(minutes=4)).isoformat(),
+                               "log_info_grp/school_code": s["code"], "log_info_grp/week_start_date": d.date().isoformat(),
+                               "weekly_grp/boarders_present": random.randint(250, 1200), "weekly_grp/students_absent_illness": random.randint(0, 40),
+                               "weekly_grp/students_sent_home": random.randint(0, 8), "weekly_grp/sickbay_admissions": random.randint(0, 25),
+                               "weekly_grp/malaria_expenditure_ugx": random.choice([0, 0, 50000, 120000, 300000, 850000]), "weekly_grp/bursar_name": "BURSAR Y",
+                               "_attachments": [], "_geolocation": [None, None]})
     for k in data:
         data[k].sort(key=lambda s: s["_id"])
     return data

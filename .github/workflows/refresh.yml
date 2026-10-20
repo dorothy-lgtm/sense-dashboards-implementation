@@ -45,6 +45,8 @@ jobs:
           python scripts/summarize.py
           python scripts/roster.py
           python scripts/metrics.py
+          python scripts/prospective.py
+          python scripts/schema_snapshot.py
 
       # Encrypt the data files with the team passphrase. Without the secret the step removes the
       # plaintext so the published site carries no school-level data at all.
@@ -57,8 +59,8 @@ jobs:
         run: |
           git config user.name "sense-dashboards[bot]"
           git config user.email "sense-dashboards@users.noreply.github.com"
-          git rm -q --cached --ignore-unmatch site/data/summary.json site/data/roster.json site/data/metrics.json
-          git add -A site/data
+          git rm -q --cached --ignore-unmatch site/data/summary.json site/data/roster.json site/data/metrics.json site/data/prospective.json
+          git add -A site/data state/forms_schema.json
           if git diff --cached --quiet; then
             echo "No change in summary"
           else

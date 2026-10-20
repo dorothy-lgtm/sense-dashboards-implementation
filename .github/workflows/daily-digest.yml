@@ -45,6 +45,7 @@ jobs:
           python scripts/summarize.py
           python scripts/roster.py
           python scripts/metrics.py
+          python scripts/prospective.py
 
       - name: Send digest
         env:

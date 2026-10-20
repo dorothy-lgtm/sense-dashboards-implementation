@@ -13,7 +13,7 @@ const isNum = v => typeof v === "number" && !Number.isNaN(v);
 const yes = v => { const s = String(v ?? "").trim().toLowerCase(); return /^(yes|all|some|present|partial)\b/.test(s) || s === "y"; };
 const no = v => { const s = String(v ?? "").trim().toLowerCase(); return /^(no|none|absent)\b/.test(s) || s === "n"; };
 
-let SUMMARY = null, ROSTER = null, METRICS = null;
+let SUMMARY = null, ROSTER = null, METRICS = null, PROSPECTIVE = null;
 const PAGES = {};                        // key → { title, render(arg), filters: bool }
 const FILTER = { district: "", school: "", term: "" };   // shared filters for analytic pages
 
@@ -126,7 +126,7 @@ function showPage(key, arg) {
 function rerender() { if (currentPage && PAGES[currentPage].filters) PAGES[currentPage].render(); }
 
 const NAV = [
-  ["recruit", "Recruitment"], ["retro", "Retrospective"], ["severe", "Severe cases"], ["infra", "Infrastructure"], ["prevention", "Mosquito prevention"],
+  ["recruit", "Recruitment"], ["retro", "Retrospective"], ["prospective", "Prospective"], ["severe", "Severe cases"], ["infra", "Infrastructure"], ["prevention", "Mosquito prevention"],
   ["structures", "Structures"], ["planning", "Coverage planning"], ["nurse", "Nurse and testing"], ["practices", "Testing & prevention practices"], ["forms", "Form monitoring"],
 ];
 
@@ -156,18 +156,18 @@ async function loadData() {
   // Encrypted files are the published form; plaintext only exists in local development.
   const enc = await fetch("data/summary.json.enc", { cache: "no-store" });
   if (!enc.ok) {
-    const [s, r, m] = await Promise.all(["summary", "roster", "metrics"].map(f => fetch(`data/${f}.json`, { cache: "no-store" })));
+    const [s, r, m, p] = await Promise.all(["summary", "roster", "metrics", "prospective"].map(f => fetch(`data/${f}.json`, { cache: "no-store" })));
     if (!s.ok) return false;
-    SUMMARY = await s.json(); ROSTER = r.ok ? await r.json() : null; METRICS = m.ok ? await m.json() : null;
+    SUMMARY = await s.json(); ROSTER = r.ok ? await r.json() : null; METRICS = m.ok ? await m.json() : null; PROSPECTIVE = p.ok ? await p.json() : null;
     return true;
   }
-  const blobs = await Promise.all(["summary", "roster", "metrics"].map(async f => { const x = await fetch(`data/${f}.json.enc`, { cache: "no-store" }); return x.ok ? x.json() : null; }));
+  const blobs = await Promise.all(["summary", "roster", "metrics", "prospective"].map(async f => { const x = await fetch(`data/${f}.json.enc`, { cache: "no-store" }); return x.ok ? x.json() : null; }));
   let pw = null, remember = false, msg = "";
   try { pw = sessionStorage.getItem("sense_pw") || localStorage.getItem("sense_pw"); } catch (e) {}
   for (let attempt = 0; attempt < 5; attempt++) {
     if (!pw) { const a = await askPassphrase(msg); pw = a.pw; remember = a.rem; }
     try {
-      [SUMMARY, ROSTER, METRICS] = await Promise.all(blobs.map(b => b ? decryptBlob(b, pw) : null));
+      [SUMMARY, ROSTER, METRICS, PROSPECTIVE] = await Promise.all(blobs.map(b => b ? decryptBlob(b, pw) : null));
       try { sessionStorage.setItem("sense_pw", pw); if (remember) localStorage.setItem("sense_pw", pw); } catch (e) {}
       return true;
     } catch (e) {

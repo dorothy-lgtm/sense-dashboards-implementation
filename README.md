@@ -176,3 +176,18 @@ python scripts/summarize.py
 - **A form shows an error card** — its UID changed or the account lost access; the other forms still refresh.
 - **Dashboard says data is N hours old** — the scheduled run failed; open the Actions tab for the log.
 - **"no saved export settings on this form"** — in Kobo open the form → Data → Downloads, create an export (XLSX, labels, "include groups" as preferred) and save it; the pipeline picks it up on the next run.
+
+## Prospective logs (nurse log, bursar log)
+
+The two continuous log forms (`nurse_log`, `bursar_log` in `config/forms.yml`) feed the **Prospective** page.
+`scripts/prospective.py` reduces each form to one row per school per ISO week — number of entries, the sum of
+every numeric question, the count of every answer to every choice question — and writes `site/data/prospective.json`
+(encrypted like the other data files). Individual entries, free text, names and phone numbers never leave the runner.
+
+Which questions mean "RDTs done", "RDT positive", "boarders present" and so on is set in `config/prospective.yml`.
+Roles left blank are auto-detected from question names; the page's *Data notes* panel shows what was resolved, and a
+wrong guess is fixed by pinning the question there (`positive: "rdt_result = positive"` or `tested: "num_rdt_done"`).
+The *Explore a question* panel charts any numeric or choice question on the form without configuration.
+
+`state/forms_schema.json` (committed on every refresh) holds the structure of every pulled form — question names,
+types, labels and choice lists, no data — so the forms can be inspected from the repository.

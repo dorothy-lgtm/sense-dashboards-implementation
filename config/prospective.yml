@@ -1,0 +1,67 @@
+# Prospective log forms (filled in continuously by school nurses and bursars) and how the
+# dashboard reads them. Each form is reduced to ONE ROW PER SCHOOL PER ISO WEEK before it is
+# published: number of entries, the sum of every numeric question and the count of every
+# answer to every choice question. Individual log entries never leave the GitHub runner.
+#
+# Roles name the questions the Prospective page uses for its tiles and charts. Leave a role
+# blank to let the pipeline auto-detect it from the question names (patterns under `auto`,
+# tried in order); fill it in to pin it. A role is either
+#   - a NUMERIC question, summed:                 "num_rdt_positive"
+#   - a CHOICE question + the answers that count: "rdt_result = positive"   (regex, case-insensitive)
+# Questions inside repeat groups (one row per patient, say) are found automatically.
+# The resolved roles are written to site/data/prospective.json and shown on the page, so a
+# wrong auto-detection is visible and can be pinned here.
+
+forms:
+  - key: nurse_log
+    title: "Nurse log"
+    roles:
+      school_code: ""        # auto: a question named like school_code
+      school_name: ""        # fallback join when there is no code
+      date: ""               # the day/week the entry refers to; auto: first date question, else submission time
+      seen: ""               # students seen / consultations
+      tested: ""             # RDTs done
+      positive: ""           # RDT positive / confirmed malaria
+      treated: ""            # ACT courses given
+      severe: ""             # severe cases
+      referred: ""           # referrals out
+    auto:
+      seen:     ["(student|pupil|patient|case|learner).*(seen|attend|visit|consult)", "(seen|visits|consultations|attendances)"]
+      tested:   ["rdt.*(done|perform|test|used|conduct|carried)", "(num|number|total|no)_?.*(rdt|test)", "tested", "rdt_?result = positive|negative", "(rdt_?done|tested|rdt_?performed) = ^yes"]
+      positive: ["(rdt|test|malaria).*positive", "positive", "confirmed", "(rdt_?result|result|test_?result) = positive"]
+      treated:  ["act.*(given|used|dispens|issued|administ|course)", "(num|number|total).*(treat|act)", "treated", "(treat|act_?given|drug) = ^yes|act|artemether|coartem|lumefantrine"]
+      severe:   ["severe", "severe = ^yes"]
+      referred: ["refer", "refer = ^yes"]
+    labels:
+      seen: "Students seen"
+      tested: "RDTs done"
+      positive: "RDT positive"
+      treated: "ACT given"
+      severe: "Severe cases"
+      referred: "Referred"
+
+  - key: bursar_log
+    title: "Bursar log"
+    roles:
+      school_code: ""
+      school_name: ""
+      date: ""
+      boarders: ""           # boarders present / in residence
+      absent: ""             # students absent (illness)
+      sent_home: ""          # students sent home sick
+      admitted: ""           # sick-bay admissions
+      expenditure: ""        # malaria-related spending (UGX)
+    auto:
+      boarders:    ["boarder", "(students|pupils|learners).*(present|resident|in_?school)"]
+      absent:      ["absent", "absence", "missed"]
+      sent_home:   ["sent_?home", "home.*(sick|ill)", "discharg"]
+      admitted:    ["admit", "sick_?bay", "sickbay"]
+      expenditure: ["expend", "spent", "cost", "ugx", "amount", "expense", "purchase"]
+    stats:                 # how to combine school-weeks: sum (default) or mean per school-week — for stocks like head-counts
+      boarders: mean
+    labels:
+      boarders: "Boarders present"
+      absent: "Absent (illness)"
+      sent_home: "Sent home sick"
+      admitted: "Sick-bay admissions"
+      expenditure: "Malaria spending (UGX)"

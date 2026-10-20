@@ -69,6 +69,22 @@ forms:
     dedupe_key: [district]
     quality: { min_duration_minutes: 1 }
 
+  # Prospective logs (continuous entries by school staff; aggregated to school-weeks by
+  # scripts/prospective.py — see config/prospective.yml)
+  - key: nurse_log
+    name: "Nurse log (prospective)"
+    uid: anWs3BHcedteBeE4KVm2aY
+    group_by: [district, school_name]
+    dedupe_key: []               # many entries per school by design
+    quality: { min_duration_minutes: 1 }
+
+  - key: bursar_log
+    name: "Bursar log (prospective)"
+    uid: aKHoLcChEGxRqCksRpadQN
+    group_by: [district, school_name]
+    dedupe_key: []
+    quality: { min_duration_minutes: 1 }
+
 # Data-quality thresholds
 quality:
   min_duration_minutes: 3      # submissions faster than this are flagged
