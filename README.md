@@ -191,3 +191,11 @@ The *Explore a question* panel charts any numeric or choice question on the form
 
 `state/forms_schema.json` (committed on every refresh) holds the structure of every pulled form — question names,
 types, labels and choice lists, no data — so the forms can be inspected from the repository.
+
+## Maps
+
+`site/geo/uganda_districts.json` holds Uganda's 2020 district boundaries (geoBoundaries gbOpen UGA ADM3, CC0 / public
+domain, simplified to 0.001°). The Recruitment page colours study districts by recruitment status — *recruiting now* =
+a school recruited (Annex H) in the last 2 working days before the data pull, weekends excluded — and draws one dot per
+recruited school at a stable pseudo-random point inside its district. Dots are representative only; school GPS points
+are never published. The four cities (Gulu, Lira, Jinja, Arua) are drawn on their parent district's boundary.
