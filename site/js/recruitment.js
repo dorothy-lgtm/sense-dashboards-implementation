@@ -1,5 +1,14 @@
 /* ------------------------------------------------------------ recruitment view */
 let district = null;
+let districtView = "all";          // all | recruiting | reached | notstarted
+/** Recruitment status of a district: not started → recruiting (below its eligible count, or no count known) → target reached. */
+function recruitStatus(d) {
+  const started = d.entered || d.opened || d.recruited > 0;
+  if (!started) return "notstarted";
+  if (d.target_schools !== null && d.recruited >= d.target_schools) return "reached";
+  return "recruiting";
+}
+const STATUS_LABEL = { all: "All districts", recruiting: "Still recruiting", reached: "Target reached", notstarted: "Not started" };
 function renderRecruit() {
   const el = $("#page-recruit");
   if (!ROSTER) { el.innerHTML = `<p class="empty">roster.json not available yet.</p>`; return; }
@@ -12,12 +21,17 @@ function renderRecruit() {
   const eligKnown = known.reduce((a, d) => a + Math.max(d.target_schools, d.recruited), 0), recKnown = known.reduce((a, d) => a + d.recruited, 0), recUnknown = unknown.reduce((a, d) => a + d.recruited, 0);
   const headroomTile = tile("If all eligible schools in entered districts were recruited", `≥ ${num(eligKnown + recUnknown)}`,
       `${num(known.length)} entered districts with an eligible count: ${num(eligKnown)} eligible, ${num(recKnown)} recruited, ${num(eligKnown - recKnown)} remaining · ${num(unknown.length)} entered districts with no eligible count (${num(recUnknown)} recruited there) — true figure is higher if those have more eligible schools`, true);
+  const byStatus = k => ROSTER.districts.filter(d => recruitStatus(d) === k);
+  const recruiting = byStatus("recruiting"), noCount = recruiting.filter(d => d.target_schools === null), toGo = recruiting.reduce((a, d) => a + (d.target_schools !== null ? d.target_schools - d.recruited : 0), 0);
+  const recruitingTile = tile("Districts still recruiting", num(recruiting.length),
+      `${num(recruiting.length - noCount.length)} below their eligible count (${num(toGo)} schools to go) · ${num(noCount.length)} with no eligible count yet · ${num(byStatus("reached").length)} reached their count · ${num(byStatus("notstarted").length)} not started`);
   const pipelineTile = tile("Districts in pipeline", `${num(t.districts_prep + t.districts_pre_entry)}`, `${num(t.districts_prep)} preparation · ${num(t.districts_pre_entry)} pre-entry done · ${num(t.districts_scheduled)} with a meeting date set`);
   const elig = Object.entries(t.screening_outcomes || {}).map(([k, v]) => `${esc(titleCase(k))}: ${num(v)}`).join(" · ");
   el.innerHTML = `
     <div class="tiles">
       ${openedTile}
       ${tile("Districts entered", num(t.districts_entered), "≥1 school with Annex H")}
+      ${recruitingTile}
       ${pipelineTile}
       ${headroomTile}
       <div class="card tile"><div class="label">Schools recruited</div><div class="value">${num(t.schools_recruited)}<span class="meta"> / ${num(target)}</span></div>
@@ -30,6 +44,7 @@ function renderRecruit() {
 
     <h3>Recruitment by district <span class="meta">— click a district for its schools</span></h3>
     <div class="legend"><span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> of which assessed &nbsp; · bar length vs the district's eligible schools (pre-entry form "target schools mobilized", or config/districts.csv) &nbsp; · stage from the district checklists: preparation → pre-entry → opened (entry meeting)</div>
+    ${toggles("district-view", Object.entries(STATUS_LABEL).map(([key, label]) => ({ key, label: `${label} (${key === "all" ? ROSTER.districts.length : byStatus(key).length})` })), districtView)}
     <div class="card scroll" id="districts"></div>
 
     <h3 id="schools-title">Schools</h3>
@@ -44,6 +59,7 @@ function renderRecruit() {
   renderDistricts();
   renderSchools();
   renderIssues();
+  wireToggles("district-view", k => { districtView = k; renderDistricts(); });
 }
 
 const STAGE_COLOR = { 0: "var(--axis)", 1: "var(--warning)", 2: "var(--warning)", 3: "var(--good)" };
@@ -57,7 +73,7 @@ function stageCell(d) {
   return `<span class="flag"><span class="dot" style="background:${col}"></span>${esc(d.stage)}</span>${detail ? `<br><span class="meta">${detail}</span>` : ""}`;
 }
 function renderDistricts() {
-  const ds = [...ROSTER.districts].sort((a, b) => (b.entered - a.entered) || (b.stage_rank - a.stage_rank) || a.district.localeCompare(b.district));
+  const ds = [...ROSTER.districts].filter(d => districtView === "all" || recruitStatus(d) === districtView).sort((a, b) => (b.entered - a.entered) || (b.stage_rank - a.stage_rank) || a.district.localeCompare(b.district));
   const maxRef = Math.max(1, ...ds.map(d => d.target_schools || d.recruited));
   const rows = ds.map(d => {
     const ref = d.target_schools || maxRef;
@@ -72,7 +88,7 @@ function renderDistricts() {
   });
   $("#districts").innerHTML = table(
     [{t:"District"},{t:"Sub-region"},{t:"Stage"},{t:"Eligible schools",num:true},{t:"Screened",num:true},{t:"Recruited"},{t:"Assessed",num:true},{t:"Awaiting assessment",num:true}],
-    rows, "No districts yet", (r, i) => `class="row" data-d="${esc(ds[i].district)}" aria-selected="${ds[i].district === district}"`);
+    rows, districtView === "all" ? "No districts yet" : `No districts are in “${STATUS_LABEL[districtView]}”`, (r, i) => `class="row" data-d="${esc(ds[i].district)}" aria-selected="${ds[i].district === district}"`);
   $("#districts").querySelectorAll("tr.row").forEach(tr => tr.onclick = () => selectDistrict(tr.dataset.d === district ? null : tr.dataset.d));
 }
 
