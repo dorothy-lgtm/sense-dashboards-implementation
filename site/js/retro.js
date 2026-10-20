@@ -20,13 +20,14 @@
 
     const dist = byDistrict(schools).map(([d, ss]) => {
       const rows = ss.flatMap(s => termRows(s));
-      return { district: d, confirmed: avg(rows, F.confirmed), boarders: avg(rows, F.boarders), cases: avg(rows, F.cases), n: rows.length, schools: ss.length };
+      return { district: d, confirmed: avg(rows, F.confirmed), boarders: avg(rows, F.boarders), enrol: avg(rows, F.enrol), cases: avg(rows, F.cases), n: rows.length, schools: ss.length };
     });
 
     el.innerHTML = `
       <div class="tiles">
         ${tile("Districts covered", num(districts.size))}
         ${tile("Schools covered", num(schools.length), `${num(recs.length)} school-term records`)}
+        ${rangeTile("Avg enrolment (all students)", recs.map(r => r[F.enrol]), { note: "per school-term" })}
         ${rangeTile("Avg boarders", recs.map(r => r[F.boarders]), { note: "per school-term" })}
         ${rangeTile("Avg malaria cases (all)", recs.map(r => r[F.cases]), { note: "per school-term" })}
         ${rangeTile("Avg confirmed cases", recs.map(r => r[F.confirmed]), { note: "per school-term" })}
@@ -43,8 +44,8 @@
       <div class="grid-2" style="margin-top:12px">
         <div class="card"><h3>Confirmed cases by district <span class="sub">Average per school per term</span></h3>
           ${barList(dist.filter(d => isNum(d.confirmed)).sort((a, b) => b.confirmed - a.confirmed).map(d => ({ label: d.district, value: d.confirmed })))}</div>
-        <div class="card"><h3>Boarders by district <span class="sub">Average per school per term</span></h3>
-          ${barList(dist.filter(d => isNum(d.boarders)).sort((a, b) => b.boarders - a.boarders).map(d => ({ label: d.district, value: d.boarders, color: "var(--series-3)" })))}</div>
+        <div class="card"><h3>Enrolment and boarders by district <span class="sub">Average per school per term · enrolment = all students</span></h3>
+          ${barList(dist.filter(d => isNum(d.enrol)).sort((a, b) => b.enrol - a.enrol).map(d => ({ label: d.district, value: d.enrol, color: "var(--series-3)", note: `· boarders ${num(Math.round(d.boarders ?? 0))}` })))}</div>
       </div>
       <div class="card" style="margin-top:12px"><h3>School-term records <span class="sub">Click a column heading to sort</span></h3><div class="scroll" id="retro-table"></div></div>`;
 
