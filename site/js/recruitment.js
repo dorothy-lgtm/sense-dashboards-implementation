@@ -96,9 +96,9 @@ function renderMaps() {
   const legend = `<span class="dot" style="background:${STATUS_FILL.active}"></span> recruiting now &nbsp; <span class="dot" style="background:${STATUS_FILL.quiet}"></span> quiet &nbsp; <span class="dot" style="background:${STATUS_FILL.notstarted}"></span> not started &nbsp; · cities (Gulu, Lira, Jinja, Arua) are drawn on their district boundary`;
   $("#map-status").innerHTML = districtMap(items, { legend });
   const schools = ROSTER.schools.filter(s => s.recruited);
-  const dots = schools.map(s => ({ district: s.district, code: s.code, title: `${s.name} (${s.district})${s.assessed ? " · assessed" : " · awaiting assessment"}`, color: s.assessed ? "var(--series-3)" : "var(--series-1)" }));
+  const dots = schools.map(s => ({ district: s.district, code: s.code, title: `${s.name} (${s.district})`, color: "var(--series-1)" }));
   const faint = ROSTER.districts.map(d => ({ district: d.district, fill: "var(--grid)", label: titleCase(d.district), title: `${d.district}: ${num(d.recruited)} recruited`, dim: districtView !== "all" && recruitStatus(d) !== districtView }));
-  $("#map-schools").innerHTML = districtMap(faint, { dots, legend: `<span class="dot" style="background:var(--series-1)"></span> recruited &nbsp; <span class="dot" style="background:var(--series-3)"></span> recruited and assessed &nbsp; · ${num(schools.length)} schools` });
+  $("#map-schools").innerHTML = districtMap(faint, { dots, legend: `<span class="dot" style="background:var(--series-1)"></span> recruited school &nbsp; · ${num(schools.length)} schools` });
   $$("#map-status path.dist, #map-schools path.dist").forEach(p => p.onclick = () => selectDistrict(p.dataset.d === district ? null : p.dataset.d));
 }
 
