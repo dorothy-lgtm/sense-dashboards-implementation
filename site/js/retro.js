@@ -35,7 +35,7 @@
         ${rangeTile("Avg RDT used", recs.map(r => r[F.rdt]), { note: "per school-term" })}
         ${rangeTile("Avg ACT used", recs.map(r => r[F.act]), { note: "per school-term" })}
       </div>
-      <div class="card" style="margin-top:12px"><h3>Between-school variation (for sample-size work) <span class="sub">Per-school incidence pooled over the selected terms. CV = SD ÷ mean of school rates; k = CV after removing Poisson noise (Hayes &amp; Moulton); SD(log) = SD of log rates. "Clean" excludes records failing the consistency checks (severe &gt; confirmed, confirmed &gt; all cases)</span></h3>
+      <div class="card" style="margin-top:12px"><h3>Between-school variation (for sample-size work) <span class="sub">Per-school incidence pooled over the selected terms. CV = SD ÷ mean of school rates; k = CV after removing Poisson noise (Hayes &amp; Moulton); SD(log) = SD of log rates. "Clean" excludes records failing the consistency checks (severe &gt; confirmed, confirmed &gt; all cases); "bottom 10% removed" drops the schools with the lowest pooled rate for that row — a floor on eligibility</span></h3>
         <div id="retro-cv"></div></div>
       <div class="grid-2" style="margin-top:12px">
         <div class="card"><h3>Cases by term <span class="sub">Average per school; the term filter does not narrow this chart</span></h3>
@@ -77,6 +77,17 @@
     return { n: rates.length, mean: m, cv: sd / m, k, sdlog: sdl };
   }
   function pearson(a, b) { const ma = mean(a), mb = mean(b); const num = sum(a.map((x, i) => (x - ma) * (b[i] - mb))); const den = Math.sqrt(sum(a.map(x => (x - ma) ** 2)) * sum(b.map(y => (y - mb) ** 2))); return den ? num / den : null; }
+  /** Records of the schools whose pooled rate is at or above the p-th percentile of the school distribution (floor). */
+  function floorRecs(rows, numKey, denKey, p = 0.1) {
+    const per = new Map();
+    rows.forEach(r => { const n = r[numKey], d = r[denKey]; if (isNum(n) && isNum(d) && d > 0) { const x = per.get(r._school.code) || [0, 0]; x[0] += n; x[1] += d; per.set(r._school.code, x); } });
+    const rates = new Map([...per].map(([c, [n, d]]) => [c, n / d]));
+    const sorted = [...rates.values()].sort((a, b) => a - b);
+    if (sorted.length < 10) return rows;
+    const cut = sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(p * (sorted.length - 1))))];
+    const keep = new Set([...rates].filter(([, v]) => v >= cut).map(([c]) => c));
+    return rows.filter(r => keep.has(r._school.code));
+  }
   /** Correlation of per-school rates between the two most recent terms, for the schools in `rs`. */
   function termCorr(rs, allRecs, numKey, denKey, t1, t2) {
     const keep = new Set(rs.map(r => r._school.code));
@@ -94,8 +105,9 @@
     const terms = [...new Set(allRecs.map(termKey))].filter(Boolean).sort();
     const [t1, t2] = terms.length >= 2 ? terms.slice(-2) : [null, null];
     const specs = [["Confirmed cases per student", F.confirmed, F.enrol], ["All malaria cases per student", F.cases, F.enrol], ["Confirmed cases per boarder", F.confirmed, F.boarders], ["Severe cases per student", F.severe, F.enrol]];
-    const sets = [["", recs], [" (clean)", clean]];
-    const rowsOut = sets.flatMap(([suffix, set]) => specs.map(([l, n, d]) => {
+    const sets = [["", recs], [" (clean)", clean], [" (bottom 10% of schools removed)", null]];
+    const rowsOut = sets.flatMap(([suffix, rs]) => specs.map(([l, n, d]) => {
+      const set = rs || floorRecs(recs, n, d, 0.1);
       const st = cvStats(set, n, d);
       if (!st) return [l + suffix, "—", "—", "—", "—", "—", "—", "—"];
       const c = t1 ? termCorr(set, allRecs, n, d, t1, t2) : { r: null, n: 0 };
