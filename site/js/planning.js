@@ -2,10 +2,10 @@
 // of the Annex G structure survey and scaled to a chosen number of schools (one arm = 55 of 165).
 (function () {
   const REPEAT = "Classrooms_dormitories_grp";
-  const DEF = { schools: 55, basis: "mean", dorms: true, classes: true, scaleClasses: false, surfaces: "walls_ceiling", emanUnits: 6, emanArea: 15, m2PerBottle: 250, maxH: 6, maxLW: 60 };
+  const DEF = { schools: 55, basis: "mean", dorms: true, classes: true, scaleClasses: false, surfaces: "walls_ceiling", emanUnits: 6, emanArea: 50, m2PerBottle: 250, maxH: 6, maxLW: 60 };
   let P = { ...DEF };
-  try { const saved = JSON.parse(localStorage.getItem("sense_plan") || "{}"); if (saved.v === 2) Object.assign(P, saved); } catch (e) {}
-  P.v = 2;
+  try { const saved = JSON.parse(localStorage.getItem("sense_plan") || "{}"); if (saved.v === 3) Object.assign(P, saved); } catch (e) {}
+  P.v = 3;
   const save = () => { try { localStorage.setItem("sense_plan", JSON.stringify(P)); } catch (e) {} };
   const isDorm = r => /dorm/i.test(String(r.structure_category ?? ""));
   const isClass = r => /class/i.test(String(r.structure_category ?? ""));
@@ -21,7 +21,7 @@
       const eu = Number(P.emanUnits) || 0, ea = Number(P.emanArea) || 0;
       const floor = L * W;
       (L > 0 && W > 0 && H > 0 && H <= P.maxH && L <= P.maxLW && W <= P.maxLW ? ok : bad).push({ r, L, W, H, floor, wall: 2 * (L + W) * H, vol: floor * H, beds: isNum(r.dormitory_capacity) ? r.dormitory_capacity : null,
-        eman: eu > 0 && ea > 0 ? Math.ceil(floor / ea) * eu : 0 });   // units per structure, rounded up to whole 15 m² blocks
+        eman: eu > 0 && ea > 0 ? Math.ceil(floor / ea) * eu : 0 });   // units per structure, rounded up to whole 50 m² blocks
     });
     const dorms = ok.filter(x => isDorm(x.r)), classes = ok.filter(x => isClass(x.r)), other = ok.filter(x => !isDorm(x.r) && !isClass(x.r));
     const agg = xs => ({ n: xs.length, floor: sum(xs.map(x => x.floor)), wall: sum(xs.map(x => x.wall)), vol: sum(xs.map(x => x.vol)), beds: sum(xs.map(x => x.beds || 0)), eman: sum(xs.map(x => x.eman)) });
@@ -106,7 +106,7 @@
     $("#pl-eman-units").onchange = e => { P.emanUnits = Number(e.target.value) || DEF.emanUnits; re(); };
     $("#pl-eman-area").onchange = e => { P.emanArea = Number(e.target.value) || DEF.emanArea; re(); };
     $("#pl-bottle").onchange = e => { P.m2PerBottle = e.target.value; re(); };
-    $("#pl-reset").onclick = () => { P = { ...DEF, v: 2 }; re(); };
+    $("#pl-reset").onclick = () => { P = { ...DEF, v: 3 }; re(); };
 
     const byD = byDistrict(sps).map(([d, ss]) => { const ts = ss.map(totalsFor); return { district: d, schools: ss.length, floor: mean(ts.map(t => t.floor)), wall: mean(ts.map(t => t.wall)), irs: mean(ts.map(t => t.irs)), vol: mean(ts.map(t => t.vol)), n: mean(ts.map(t => t.n)), eman: mean(ts.map(t => t.eman)) }; });
     sortableTable($("#pl-district"), [
