@@ -35,7 +35,7 @@
         ${rangeTile("Avg RDT used", recs.map(r => r[F.rdt]), { note: "per school-term" })}
         ${rangeTile("Avg ACT used", recs.map(r => r[F.act]), { note: "per school-term" })}
       </div>
-      <div class="card" style="margin-top:12px"><h3>Between-school variation (for sample-size work) <span class="sub">Per-school incidence pooled over the selected terms. CV = SD ÷ mean of school rates; k = CV after removing Poisson noise (Hayes &amp; Moulton); SD(log) = SD of log rates. "Clean" excludes records failing the consistency checks (severe &gt; confirmed, confirmed &gt; all cases); "trimmed" keeps only the schools between the p10 and p90 of that rate</span></h3>
+      <div class="card" style="margin-top:12px"><h3>Between-school variation (for sample-size work) <span class="sub">Per-school incidence pooled over the selected terms. CV = SD ÷ mean of school rates; k = CV after removing Poisson noise (Hayes &amp; Moulton); SD(log) = SD of log rates. "Clean" excludes records failing the consistency checks (severe &gt; confirmed, confirmed &gt; all cases)</span></h3>
         <div id="retro-cv"></div></div>
       <div class="grid-2" style="margin-top:12px">
         <div class="card"><h3>Cases by term <span class="sub">Average per school; the term filter does not narrow this chart</span></h3>
@@ -77,22 +77,6 @@
     return { n: rates.length, mean: m, cv: sd / m, k, sdlog: sdl };
   }
   function pearson(a, b) { const ma = mean(a), mb = mean(b); const num = sum(a.map((x, i) => (x - ma) * (b[i] - mb))); const den = Math.sqrt(sum(a.map(x => (x - ma) ** 2)) * sum(b.map(y => (y - mb) ** 2))); return den ? num / den : null; }
-  /** Per-school pooled rate for a numerator/denominator pair → Map(code → rate). */
-  function schoolRates(rows, numKey, denKey) {
-    const per = new Map();
-    rows.forEach(r => { const n = r[numKey], d = r[denKey]; if (isNum(n) && isNum(d) && d > 0) { const p = per.get(r._school.code) || [0, 0]; p[0] += n; p[1] += d; per.set(r._school.code, p); } });
-    return new Map([...per].map(([c, [n, d]]) => [c, n / d]));
-  }
-  /** Records of the schools whose pooled rate lies within [p_lo, p_hi] of the school distribution. */
-  function trimRecs(rows, numKey, denKey, lo = 0.1, hi = 0.9) {
-    const rates = schoolRates(rows, numKey, denKey);
-    const sorted = [...rates.values()].sort((a, b) => a - b);
-    if (sorted.length < 10) return rows;
-    const q = p => sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(p * (sorted.length - 1))))];
-    const a = q(lo), b = q(hi);
-    const keep = new Set([...rates].filter(([, v]) => v >= a && v <= b).map(([c]) => c));
-    return rows.filter(r => keep.has(r._school.code));
-  }
   /** Correlation of per-school rates between the two most recent terms, for the schools in `rs`. */
   function termCorr(rs, allRecs, numKey, denKey, t1, t2) {
     const keep = new Set(rs.map(r => r._school.code));
@@ -110,9 +94,8 @@
     const terms = [...new Set(allRecs.map(termKey))].filter(Boolean).sort();
     const [t1, t2] = terms.length >= 2 ? terms.slice(-2) : [null, null];
     const specs = [["Confirmed cases per student", F.confirmed, F.enrol], ["All malaria cases per student", F.cases, F.enrol], ["Confirmed cases per boarder", F.confirmed, F.boarders], ["Severe cases per student", F.severe, F.enrol]];
-    const sets = [["", recs], [" (clean)", clean], [" (p10–p90 trimmed)", null]];
-    const rowsOut = sets.flatMap(([suffix, rs]) => specs.map(([l, n, d]) => {
-      const set = rs || trimRecs(recs, n, d);
+    const sets = [["", recs], [" (clean)", clean]];
+    const rowsOut = sets.flatMap(([suffix, set]) => specs.map(([l, n, d]) => {
       const st = cvStats(set, n, d);
       if (!st) return [l + suffix, "—", "—", "—", "—", "—", "—", "—"];
       const c = t1 ? termCorr(set, allRecs, n, d, t1, t2) : { r: null, n: 0 };
@@ -122,7 +105,7 @@
     }));
     el.innerHTML = table([{t:"Rate"},{t:"Schools",num:true},{t:"Mean per 1,000 per term",num:true},{t:"CV (observed)",num:true},{t:"k (Poisson-corrected)",num:true},{t:"SD of log rate",num:true},
                           {t:`r, ${t1 ? esc(t1) + " vs " + esc(t2) : "last two terms"}`,num:true},{t:"k after baseline adjustment",num:true}], rowsOut)
-      + `<p class="meta">r = correlation across schools of the per-school rate in the last two terms (schools with both terms in brackets) — a proxy for how well baseline incidence predicts the trial outcome. k after baseline adjustment ≈ k·√(1−r²): the between-school CV left once the analysis adjusts for (or randomisation is stratified on) baseline incidence. Trimming drops the schools that drive both k and r, so the adjusted k moves much less than the unadjusted one; a trimmed k is only the right planning figure if the trial's eligibility or stratification will actually exclude or absorb those schools.</p>`;
+      + `<p class="meta">r = correlation across schools of the per-school rate in the last two terms (schools with both terms in brackets) — a proxy for how well baseline incidence predicts the trial outcome. k after baseline adjustment ≈ k·√(1−r²): the between-school CV left once the analysis adjusts for (or randomisation is stratified on) baseline incidence.</p>`;
   }
   PAGES.retro = { title: "Retrospective", render, filters: true };
 })();
