@@ -214,7 +214,7 @@ def main() -> int:
 
         def attempt(h: str, p: int) -> str | None:
             """Connect → login → send; returns None on success or 'stage: error' on failure."""
-            stage = "connect"
+            stage, ehlo = "connect", ""
             try:
                 if p == 465:
                     s = smtplib.SMTP_SSL(h, p, timeout=60)
@@ -222,8 +222,9 @@ def main() -> int:
                     s = smtplib.SMTP(h, p, timeout=60)
                     s.ehlo()
                     s.starttls()
-                    s.ehlo()
                 with s:
+                    code, resp = s.ehlo()
+                    ehlo = f"{code} " + (resp.decode(errors="replace") if isinstance(resp, bytes) else str(resp)).replace("\n", " | ")
                     stage = "login"
                     s.login(user, password)
                     stage = "send"
@@ -233,7 +234,7 @@ def main() -> int:
                 err = e.smtp_error.decode(errors="replace") if isinstance(e.smtp_error, bytes) else e.smtp_error
                 return f"login rejected: {e.smtp_code} {err}"
             except (smtplib.SMTPException, OSError) as e:
-                return f"{stage} failed: {type(e).__name__}: {e}"
+                return f"{stage} failed: {type(e).__name__}: {e}" + (f" (server greeted with: {ehlo})" if ehlo else "")
 
         err = attempt(host, port)
         if err and port == 465 and "login rejected" not in err:
@@ -243,6 +244,8 @@ def main() -> int:
             if err is None:
                 log("sent via 587/STARTTLS — set the SMTP_PORT variable to 587 to skip the failing 465 attempt")
         if err:
+            app_pw = "yes" if (len(password) == 16 and password.isalpha()) else "no"
+            err += f". SMTP_PASSWORD looks like a 16-letter Google App Password: {app_pw}; SMTP_USER has an @: {'yes' if '@' in user else 'no'}"
             hint = (" For Google Workspace the SMTP_PASSWORD must be a 16-character App Password (Google Account → Security → 2-Step Verification → App passwords), not the account password."
                     if "login rejected" in err else
                     f" Attachment is {size_mb:.1f} MB (Gmail's limit is 25 MB); 'connection unexpectedly closed' at the send stage usually means the server dropped the message, at connect/login that the account or host is blocking SMTP.")
