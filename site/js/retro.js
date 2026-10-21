@@ -93,34 +93,36 @@
     const keep = new Set([...rates].filter(([, v]) => v >= a && v <= b).map(([c]) => c));
     return rows.filter(r => keep.has(r._school.code));
   }
+  /** Correlation of per-school rates between the two most recent terms, for the schools in `rs`. */
+  function termCorr(rs, allRecs, numKey, denKey, t1, t2) {
+    const keep = new Set(rs.map(r => r._school.code));
+    const byS = new Map();
+    allRecs.filter(r => keep.has(r._school.code)).forEach(r => { const n = r[numKey], d = r[denKey]; if (isNum(n) && isNum(d) && d > 0) { const o = byS.get(r._school.code) || {}; o[termKey(r)] = n / d; byS.set(r._school.code, o); } });
+    const pairs = [...byS.values()].filter(o => isNum(o[t1]) && isNum(o[t2]));
+    if (pairs.length < 5) return { r: null, n: pairs.length };
+    return { r: pearson(pairs.map(o => o[t1]), pairs.map(o => o[t2])), n: pairs.length };
+  }
   function renderCV(schools, allRecs) {
     const el = $("#retro-cv");
     const recs = schools.flatMap(s => termRows(s).map(r => ({ ...r, _school: s })));
     const clean = recs.filter(r => !isFlagged(r));
     const f2 = v => isNum(v) ? (Math.round(v * 100) / 100).toFixed(2) : "—";
-    const row = (label, st) => st ? [label, num(st.n), num(Math.round(1000 * st.mean * 10) / 10), f2(st.cv), f2(st.k), f2(st.sdlog)] : [label, "—", "—", "—", "—", "—"];
+    const terms = [...new Set(allRecs.map(termKey))].filter(Boolean).sort();
+    const [t1, t2] = terms.length >= 2 ? terms.slice(-2) : [null, null];
     const specs = [["Confirmed cases per student", F.confirmed, F.enrol], ["All malaria cases per student", F.cases, F.enrol], ["Confirmed cases per boarder", F.confirmed, F.boarders], ["Severe cases per student", F.severe, F.enrol]];
     const sets = [["", recs], [" (clean)", clean], [" (p10–p90 trimmed)", null]];
-    const rowsOut = sets.flatMap(([suffix, rs]) => specs.map(([l, n, d]) => row(l + suffix, cvStats(rs || trimRecs(recs, n, d), n, d))));
-    // predictive value of baseline: correlation of per-school confirmed incidence between the two most recent terms, for each set
-    const terms = [...new Set(allRecs.map(termKey))].filter(Boolean).sort();
-    let corr = "";
-    if (terms.length >= 2) {
-      const [t1, t2] = terms.slice(-2);
-      const corrFor = (label, rs) => {
-        const keep = new Set(rs.map(r => r._school.code));
-        const byS = new Map();
-        allRecs.filter(r => keep.has(r._school.code)).forEach(r => { const n = r[F.confirmed], d = r[F.enrol]; if (isNum(n) && isNum(d) && d > 0) { const o = byS.get(r._school.code) || {}; o[termKey(r)] = n / d; byS.set(r._school.code, o); } });
-        const pairs = [...byS.values()].filter(o => isNum(o[t1]) && isNum(o[t2]));
-        if (pairs.length < 5) return "";
-        const rr = pearson(pairs.map(o => o[t1]), pairs.map(o => o[t2]));
-        const k = cvStats(rs, F.confirmed, F.enrol);
-        return `<li><b>${label}</b>: incidence in ${esc(t1)} vs ${esc(t2)} correlates at r = ${f2(rr)} (${num(pairs.length)} schools) → adjusting for baseline incidence takes k from ${f2(k?.k)} to about k·√(1−r²) ≈ <b>${f2(k && rr !== null ? k.k * Math.sqrt(1 - rr * rr) : null)}</b>.</li>`;
-      };
-      corr = `<p class="meta" style="margin-bottom:4px">Baseline predictiveness (confirmed cases per student):</p><ul class="meta" style="margin-top:0">${corrFor("All schools", recs)}${corrFor("Clean records", clean)}${corrFor("p10–p90 trimmed", trimRecs(recs, F.confirmed, F.enrol))}</ul>
-        <p class="meta">Trimming drops the schools that drive both k and r, so the baseline-adjusted k moves much less than the unadjusted one. A trimmed k is only the right planning figure if the trial's eligibility or stratification will actually exclude or absorb those schools.</p>`;
-    }
-    el.innerHTML = table([{t:"Rate"},{t:"Schools",num:true},{t:"Mean per 1,000 per term",num:true},{t:"CV (observed)",num:true},{t:"k (Poisson-corrected)",num:true},{t:"SD of log rate",num:true}], rowsOut) + corr;
+    const rowsOut = sets.flatMap(([suffix, rs]) => specs.map(([l, n, d]) => {
+      const set = rs || trimRecs(recs, n, d);
+      const st = cvStats(set, n, d);
+      if (!st) return [l + suffix, "—", "—", "—", "—", "—", "—", "—"];
+      const c = t1 ? termCorr(set, allRecs, n, d, t1, t2) : { r: null, n: 0 };
+      const adj = isNum(c.r) ? st.k * Math.sqrt(1 - c.r * c.r) : null;
+      return [l + suffix, num(st.n), num(Math.round(1000 * st.mean * 10) / 10), f2(st.cv), f2(st.k), f2(st.sdlog),
+              isNum(c.r) ? `${f2(c.r)} <span class="meta">(${num(c.n)})</span>` : "—", `<b>${f2(adj)}</b>`];
+    }));
+    el.innerHTML = table([{t:"Rate"},{t:"Schools",num:true},{t:"Mean per 1,000 per term",num:true},{t:"CV (observed)",num:true},{t:"k (Poisson-corrected)",num:true},{t:"SD of log rate",num:true},
+                          {t:`r, ${t1 ? esc(t1) + " vs " + esc(t2) : "last two terms"}`,num:true},{t:"k after baseline adjustment",num:true}], rowsOut)
+      + `<p class="meta">r = correlation across schools of the per-school rate in the last two terms (schools with both terms in brackets) — a proxy for how well baseline incidence predicts the trial outcome. k after baseline adjustment ≈ k·√(1−r²): the between-school CV left once the analysis adjusts for (or randomisation is stratified on) baseline incidence. Trimming drops the schools that drive both k and r, so the adjusted k moves much less than the unadjusted one; a trimmed k is only the right planning figure if the trial's eligibility or stratification will actually exclude or absorb those schools.</p>`;
   }
   PAGES.retro = { title: "Retrospective", render, filters: true };
 })();
