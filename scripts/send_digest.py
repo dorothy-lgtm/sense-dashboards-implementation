@@ -210,25 +210,43 @@ def main() -> int:
         except ValueError:
             port = 465
         masked = user[:2] + "…@" + user.split("@")[-1] if "@" in user else "(user, no @ in SMTP_USER)"
-        log(f"sending as {masked} via {host}:{port} ({'SSL' if port == 465 else 'STARTTLS'}); password length {len(password)}")
-        try:
-            if port == 465:
-                with smtplib.SMTP_SSL(host, port, timeout=60) as s:
-                    s.login(user, password)
-                    s.send_message(msg, to_addrs=recipients)
-            else:
-                with smtplib.SMTP(host, port, timeout=60) as s:
+        log(f"sending as {masked} via {host}:{port} ({'SSL' if port == 465 else 'STARTTLS'}); password length {len(password)}; attachment {size_mb:.1f} MB")
+
+        def attempt(h: str, p: int) -> str | None:
+            """Connect → login → send; returns None on success or 'stage: error' on failure."""
+            stage = "connect"
+            try:
+                if p == 465:
+                    s = smtplib.SMTP_SSL(h, p, timeout=60)
+                else:
+                    s = smtplib.SMTP(h, p, timeout=60)
+                    s.ehlo()
                     s.starttls()
+                    s.ehlo()
+                with s:
+                    stage = "login"
                     s.login(user, password)
+                    stage = "send"
                     s.send_message(msg, to_addrs=recipients)
-        except smtplib.SMTPAuthenticationError as e:
-            report(f"Email NOT sent — the mail server rejected the login for {masked} on {host}:{port}. "
-                    "For Google Workspace the SMTP_PASSWORD must be an App Password (Google Account → Security → 2-Step Verification → App passwords), "
-                    f"not the account password. Server said: {e.smtp_code} {e.smtp_error.decode(errors='replace') if isinstance(e.smtp_error, bytes) else e.smtp_error}", "error")
-            zip_path.unlink(missing_ok=True)
-            return 1
-        except (smtplib.SMTPException, OSError) as e:
-            report(f"Email NOT sent — could not deliver via {host}:{port} as {masked}: {type(e).__name__}: {e}", "error")
+                return None
+            except smtplib.SMTPAuthenticationError as e:
+                err = e.smtp_error.decode(errors="replace") if isinstance(e.smtp_error, bytes) else e.smtp_error
+                return f"login rejected: {e.smtp_code} {err}"
+            except (smtplib.SMTPException, OSError) as e:
+                return f"{stage} failed: {type(e).__name__}: {e}"
+
+        err = attempt(host, port)
+        if err and port == 465 and "login rejected" not in err:
+            log(f"465/SSL attempt failed ({err}); retrying on 587/STARTTLS")
+            err2 = attempt(host, 587)
+            err = None if err2 is None else f"465 → {err}; 587 → {err2}"
+            if err is None:
+                log("sent via 587/STARTTLS — set the SMTP_PORT variable to 587 to skip the failing 465 attempt")
+        if err:
+            hint = (" For Google Workspace the SMTP_PASSWORD must be a 16-character App Password (Google Account → Security → 2-Step Verification → App passwords), not the account password."
+                    if "login rejected" in err else
+                    f" Attachment is {size_mb:.1f} MB (Gmail's limit is 25 MB); 'connection unexpectedly closed' at the send stage usually means the server dropped the message, at connect/login that the account or host is blocking SMTP.")
+            report(f"Email NOT sent as {masked} via {host}: {err}.{hint}", "error")
             zip_path.unlink(missing_ok=True)
             return 1
         log(f"sent to {recipients}: {subject}")
