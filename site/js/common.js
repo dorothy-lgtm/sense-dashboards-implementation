@@ -16,6 +16,17 @@ const no = v => { const s = String(v ?? "").trim().toLowerCase(); return /^(no|n
 let SUMMARY = null, ROSTER = null, METRICS = null, PROSPECTIVE = null;
 const PAGES = {};                        // key → { title, render(arg), filters: bool }
 const FILTER = { district: "", school: "", term: "" };   // shared filters for analytic pages
+/* De-identified view: every page reads school names from s.name, so swapping name ↔ code on the loaded data
+   de-identifies the whole dashboard (tables, maps, dropdown). Original names are kept in s._name. */
+let DEID = false;
+try { DEID = localStorage.getItem("sense_deid") === "1"; } catch (e) {}
+function applyDeid() {
+  const lists = [METRICS?.schools, ROSTER?.schools].filter(Boolean);
+  lists.forEach(list => list.forEach(s => { if (s._name === undefined) s._name = s.name; s.name = DEID ? s.code : s._name; }));
+}
+/** A free-standing school name (issue lists, unmatched forms): withheld in the codes-only view. */
+const nm = v => DEID ? "(name withheld)" : (v ?? "");
+function setDeid(on) { DEID = !!on; try { localStorage.setItem("sense_deid", DEID ? "1" : "0"); } catch (e) {} applyDeid(); }
 
 /* ---------------------------------------------------------------- descriptive stats */
 function describe(values) {
@@ -101,13 +112,15 @@ function renderFilters() {
   const schools = (METRICS?.schools || []).filter(s => !FILTER.district || s.district === FILTER.district);
   bar.innerHTML = `
     <label>District <select id="f-district"><option value="">All districts</option>${districts.map(d => `<option ${d === FILTER.district ? "selected" : ""}>${esc(d)}</option>`).join("")}</select></label>
-    <label>School <select id="f-school"><option value="">All schools</option>${schools.map(s => `<option value="${esc(s.code)}" ${s.code === FILTER.school ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</select></label>
+    <label>School <select id="f-school"><option value="">All schools</option>${[...schools].sort((a, b) => a.code.localeCompare(b.code)).map(s => `<option value="${esc(s.code)}" ${s.code === FILTER.school ? "selected" : ""}>${esc(s.code)}${DEID ? "" : " · " + esc(s.name)}</option>`).join("")}</select></label>
+    <label class="meta" title="Show study codes instead of school names everywhere (GCP de-identified view)"><input type="checkbox" id="f-deid" ${DEID ? "checked" : ""}> Codes only</label>
     <label>Term <select id="f-term"><option value="">All terms</option>${allTerms().map(t => `<option ${t === FILTER.term ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>
     <button id="f-reset" type="button">Reset</button>`;
   $("#f-district").onchange = e => { FILTER.district = e.target.value; FILTER.school = ""; renderFilters(); rerender(); };
   $("#f-school").onchange = e => { FILTER.school = e.target.value; rerender(); };
   $("#f-term").onchange = e => { FILTER.term = e.target.value; rerender(); };
   $("#f-reset").onclick = () => { FILTER.district = FILTER.school = FILTER.term = ""; renderFilters(); rerender(); };
+  $("#f-deid").onchange = e => { setDeid(e.target.checked); renderFilters(); rerender(); };
 }
 
 /* ---------------------------------------------------------------- shell */
@@ -190,6 +203,7 @@ async function load() {
   const ok = await loadData();
   if (!ok) { $("#freshness").textContent = "No data published yet."; $("#crumbs").innerHTML = `<p class="empty">No data is published. If the pipeline has run, the SITE_PASSPHRASE secret may not be set yet (see README).</p>`; return; }
   $("#lock").hidden = false;
+  applyDeid();
   const pulled = new Date(SUMMARY.pulled_at || SUMMARY.generated_at);
   const ageH = (Date.now() - pulled) / 36e5;
   $("#freshness").innerHTML = `Data pulled ${fmtDT(pulled.toISOString())} EAT` + (ageH > 6 ? ` <span class="stale">(${Math.round(ageH)} h old)</span>` : "");
