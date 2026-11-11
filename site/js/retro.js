@@ -23,10 +23,20 @@
       return { district: d, confirmed: avg(rows, F.confirmed), boarders: avg(rows, F.boarders), enrol: avg(rows, F.enrol), cases: avg(rows, F.cases), n: rows.length, schools: ss.length };
     });
 
+    // totals: students = each school's latest term in the selection (not summed across terms); cases = every term record in the selection
+    const latestRows = schools.map(s => latestTerm(s)).filter(Boolean);
+    const tot = k => { const v = recs.map(r => r[k]).filter(isNum); return v.length ? sum(v) : null; };
+    const totStudents = sum(latestRows.map(r => r[F.enrol]).filter(isNum)), totBoarders = sum(latestRows.map(r => r[F.boarders]).filter(isNum));
+    const termNote = FILTER.term ? esc(FILTER.term) : "all terms";
+
     el.innerHTML = `
       <div class="tiles">
         ${tile("Districts covered", num(districts.size))}
         ${tile("Schools covered", num(schools.length), `${num(recs.length)} school-term records`)}
+        ${tile("Total students", num(totStudents), `${num(totBoarders)} boarders · each school's ${FILTER.term ? "selected" : "latest"} term, ${num(latestRows.length)} schools`)}
+        ${tile("Total clinical cases", num(tot(F.cases)), `all malaria cases, ${termNote} · ${num(recs.filter(r => isNum(r[F.cases])).length)} records`)}
+        ${tile("Total confirmed cases", num(tot(F.confirmed)), `${termNote}${isNum(tot(F.cases)) && tot(F.cases) ? ` · ${pct(tot(F.confirmed), tot(F.cases))} of clinical` : ""}`)}
+        ${tile("Total severe cases", num(tot(F.severe)), `${termNote}${isNum(tot(F.confirmed)) && tot(F.confirmed) ? ` · ${pct(tot(F.severe), tot(F.confirmed))} of confirmed` : ""}`)}
         ${rangeTile("Avg enrolment (all students)", recs.map(r => r[F.enrol]), { note: "per school-term" })}
         ${rangeTile("Avg boarders", recs.map(r => r[F.boarders]), { note: "per school-term" })}
         ${rangeTile("Avg malaria cases (all)", recs.map(r => r[F.cases]), { note: "per school-term" })}
