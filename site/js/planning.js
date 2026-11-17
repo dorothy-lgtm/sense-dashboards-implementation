@@ -2,7 +2,7 @@
 // of the Annex G structure survey and scaled to a chosen number of schools (one arm = 55 of 165).
 (function () {
   const REPEAT = "Classrooms_dormitories_grp";
-  const DEF = { schools: 55, basis: "mean", dorms: true, classes: true, scaleClasses: false, surfaces: "walls_ceiling", emanUnits: 6, emanArea: 50, m2PerBottle: 250, maxH: 6, maxLW: 60 };
+  const DEF = { schools: 55, basis: "mean", dorms: true, classes: true, scaleClasses: false, surfaces: "walls_ceiling", emanUnits: 6, emanArea: 50, m2PerBottle: 250, maxH: 6, maxLW: 60, showHeights: false };
   let P = { ...DEF };
   try { const saved = JSON.parse(localStorage.getItem("sense_plan") || "{}"); if (saved.v === 3) Object.assign(P, saved); } catch (e) {}
   P.v = 3;
@@ -32,7 +32,7 @@
     if (P.scaleClasses && isNum(repClasses) && c.n > 0 && repClasses > c.n) {
       const k = repClasses / c.n; cs = { n: repClasses, floor: c.floor * k, wall: c.wall * k, vol: c.vol * k, beds: 0, eman: c.eman * k, scaled: true };
     }
-    return { code: s.code, name: s.name, district: s.district, surveyed: ok.length, excluded: bad.length, dorms: d, classes: cs, classesSurveyed: c, other: o, repClasses, repDorms };
+    return { code: s.code, name: s.name, district: s.district, surveyed: ok.length, excluded: bad.length, dormList: dorms, classList: classes, dorms: d, classes: cs, classesSurveyed: c, other: o, repClasses, repDorms };
   }
   function totalsFor(sp) {
     const parts = [P.dorms ? sp.dorms : null, P.classes ? sp.classes : null].filter(Boolean);
@@ -41,6 +41,25 @@
     return t;
   }
   const stat = (arr, k) => P.basis === "median" ? median(arr.map(a => a[k])) : mean(arr.map(a => a[k]));
+
+  /** Average height of the measured structures, per structure (not per school), for the current selection. */
+  function heightsCard(sps) {
+    const D = sps.flatMap(sp => sp.dormList), C = sps.flatMap(sp => sp.classList);
+    const f2 = v => isNum(v) ? v.toFixed(2) : "—";
+    const hVals = [...new Set([...D, ...C].map(x => Math.round(x.H)))].sort((a, b) => a - b);
+    const row = (label, xs) => {
+      const hs = xs.map(x => x.H), fl = sum(xs.map(x => x.floor));
+      return [label, num(xs.length), xs.length ? f2(mean(hs)) : "—", xs.length ? f2(median(hs)) : "—",
+              fl > 0 ? f2(sum(xs.map(x => x.vol)) / fl) : "—",
+              xs.length ? `${Math.min(...hs)}–${Math.max(...hs)}` : "—",
+              ...hVals.map(h => num(xs.filter(x => Math.round(x.H) === h).length))];
+    };
+    return `<div class="card" style="margin-bottom:12px"><h3>Average height <span class="sub">Per measured structure across the ${num(sps.length)} schools in the current selection · metres</span></h3>
+      ${table([{t:"Type"},{t:"Structures",num:true},{t:"Mean height m",num:true},{t:"Median m",num:true},{t:"Floor-weighted mean m",num:true},{t:"Range m",num:true},
+               ...hVals.map(h => ({ t: `${h} m`, num: true }))],
+              [row("Dormitories", D), row("Classrooms", C), row("Both", [...D, ...C])])}
+      <p class="meta">Floor-weighted mean = total volume ÷ total floor area, so large rooms count for more; it is the height that links the floor and volume tiles. The columns on the right count structures at each recorded height (the form records height in whole metres). Structures above ${P.maxH} m are excluded as implausible, as elsewhere on this page.</p></div>`;
+  }
 
   function render() {
     pageHeader("Coverage planning", filterSummary());
@@ -70,10 +89,12 @@
           <label>IRS surfaces <select id="pl-surfaces"><option value="walls_ceiling" ${P.surfaces === "walls_ceiling" ? "selected" : ""}>Walls + ceilings</option><option value="walls" ${P.surfaces === "walls" ? "selected" : ""}>Walls only</option></select></label>
           <label>Spatial emanators <input type="number" id="pl-eman-units" min="1" step="1" value="${P.emanUnits}"> units per <input type="number" id="pl-eman-area" min="1" step="1" value="${P.emanArea}"> m² of floor</label>
           <label>m² per IRS bottle / sachet <input type="number" id="pl-bottle" min="1" step="1" value="${P.m2PerBottle}"></label>
+          <button type="button" id="pl-heights" aria-expanded="${P.showHeights ? "true" : "false"}">${P.showHeights ? "Hide" : "Show"} average heights</button>
           <button type="button" id="pl-reset">Defaults</button>
         </div>
         <p class="meta">Floor = length × width; walls = 2 × (length + width) × height (gross interior wall, doors and windows not deducted); ceiling taken equal to floor; volume = floor × height. Structures with height &gt; ${P.maxH} m or any side &gt; ${P.maxLW} m are excluded as implausible (${num(excluded)} of ${num(surveyed + excluded)} records).</p>
       </div>
+      ${P.showHeights ? heightsCard(sps) : ""}
       <div class="tiles">
         ${tile(`Floor area · ${N} schools`, `${fmt0(total("floor"))}<span class="unit">m²</span>`, `${fmt0(per("floor"))} m² per school · ${ci("floor")}`)}
         ${tile(`Wall area · ${N} schools`, `${fmt0(total("wall"))}<span class="unit">m²</span>`, `${fmt0(per("wall"))} m² per school · ${ci("wall")}`)}
@@ -106,6 +127,7 @@
     $("#pl-eman-units").onchange = e => { P.emanUnits = Number(e.target.value) || DEF.emanUnits; re(); };
     $("#pl-eman-area").onchange = e => { P.emanArea = Number(e.target.value) || DEF.emanArea; re(); };
     $("#pl-bottle").onchange = e => { P.m2PerBottle = e.target.value; re(); };
+    $("#pl-heights").onclick = () => { P.showHeights = !P.showHeights; re(); };
     $("#pl-reset").onclick = () => { P = { ...DEF, v: 3 }; re(); };
 
     const byD = byDistrict(sps).map(([d, ss]) => { const ts = ss.map(totalsFor); return { district: d, schools: ss.length, floor: mean(ts.map(t => t.floor)), wall: mean(ts.map(t => t.wall)), irs: mean(ts.map(t => t.irs)), vol: mean(ts.map(t => t.vol)), n: mean(ts.map(t => t.n)), eman: mean(ts.map(t => t.eman)) }; });
