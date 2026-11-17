@@ -67,6 +67,10 @@ exports (`config/digest.yml` → `attach`), and emails them to the addresses in
 `config/digest.yml` → `to`. The body carries the headline numbers: recruited schools (distinct
 schools with an Annex H record) vs the 165 target, schools with an assessment form, and the lag.
 
+- **Head-teacher list.** `scripts/contacts.py` builds `SENSE_head_teachers.xlsx` (one row per school:
+  head teacher, head-teacher phone, school phone, nurse, nurse phone, BOG chair — latest non-empty
+  answer from Annex F and H). It travels inside the zip and, when Box is configured, to the Box
+  folder. Columns and `recruited_only` are set under `contacts:` in `config/digest.yml`.
 - **Stop rule.** It sends daily while recruited < `recruitment_target`. The day the target is
   reached it sends a final email saying so and sets `"paused": true` in `state/digest.json`.
   To resume, edit that file on GitHub (set `paused` to `false`), or run the workflow by hand

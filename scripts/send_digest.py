@@ -170,6 +170,12 @@ def main() -> int:
     lines += [form_line(f) for f in summary["forms"]]
     lines += ["", f"Attached: {zip_path.name} ({size_mb:.1f} MB, {len(files)} files)"
               + (" — AES-256 encrypted; password as agreed with the data team." if pw else "")]
+    stats_p = ROOT / "raw" / "contacts_stats.json"
+    if stats_p.exists():   # written by contacts.py; counts only
+        cs = json.loads(stats_p.read_text())
+        if any(f.name == cs["filename"] for f in files):
+            lines.append(f"Head-teacher list: {cs['filename']} inside the zip — {cs['schools']} schools, "
+                         f"{cs['with_head_teacher_phone']} with a head-teacher phone number.")
     if reached:
         lines += ["", f"*** Recruitment target reached ({recruited}/{target}). ***",
                   "This is the last automatic daily email. To keep receiving it, set \"paused\": false in "

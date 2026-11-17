@@ -17,8 +17,15 @@ subject_prefix: "[SENSE daily export]"
 # Which exports to attach (glob patterns under exports/). Kobo's own labelled XLSX per form
 # plus the flattened CSVs (incl. repeat-group files).
 attach:
+  - "SENSE_head_teachers.xlsx"   # built by scripts/contacts.py — one row per school
   - "*.kobo.xlsx"
   - "*.csv"
+
+# Head-teacher contact list (scripts/contacts.py). One row per school code, latest non-empty
+# answer per column. Set recruited_only: true to leave out schools without an Annex H record.
+contacts:
+  filename: SENSE_head_teachers.xlsx
+  recruited_only: false
 
 # Stop rule: send daily while recruited schools < recruitment_target. On the day the
 # target is reached, send one final email saying so and pause. To resume, set
