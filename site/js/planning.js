@@ -2,7 +2,7 @@
 // of the Annex G structure survey and scaled to a chosen number of schools (one arm = 55 of 165).
 (function () {
   const REPEAT = "Classrooms_dormitories_grp";
-  const DEF = { schools: 55, basis: "mean", dorms: true, classes: true, scaleClasses: false, surfaces: "walls_ceiling", emanUnits: 6, emanArea: 50, m2PerBottle: 250, maxH: 6, maxLW: 60 };
+  const DEF = { schools: 55, basis: "mean", dorms: true, classes: true, scaleClasses: false, surfaces: "walls_ceiling", emanUnits: 6, emanArea: 50, m2PerBottle: 250, maxH: 6, maxLW: 60, hType: "dorms" };
   let P = { ...DEF };
   try { const saved = JSON.parse(localStorage.getItem("sense_plan") || "{}"); if (saved.v === 3) Object.assign(P, saved); } catch (e) {}
   P.v = 3;
@@ -83,6 +83,9 @@
         ${tile(`Emanator units · ${N} schools`, emanators !== null ? fmt0(emanators) : "—", emanators !== null ? `${num(eu)} per ${num(ea)} m² of floor, rounded up per structure · ${fmt0(per("eman"))} per school · ${fmt0(emanDensity)} if not rounded` : "set the emanator rule above")}
         ${tile("IRS bottles / sachets", bottles !== null ? fmt0(bottles) : "—", bottles !== null ? `at ${num(Number(P.m2PerBottle))} m² each` : "set m² per bottle above")}
       </div>
+      <div class="card" style="margin-top:12px"><h3>Ceiling heights <span class="sub">Measured structure height (floor to ceiling) across the schools in the selection · structures above ${P.maxH} m are excluded from the space estimates and shown separately</span></h3>
+        ${toggles("pl-htype", [{ key: "dorms", label: "Dormitories" }, { key: "classes", label: "Classrooms" }, { key: "all", label: "All structures" }], P.hType)}
+        <div id="pl-heights"></div></div>
       <div class="grid-2" style="margin-top:12px">
         <div class="card"><h3>Per-school averages by structure type <span class="sub">${P.basis} over ${num(sps.length)} schools; "reported" = school-level counts from Annex G, "surveyed" = structures measured individually</span></h3>
           ${table([{t:"Type"},{t:"Surveyed / school",num:true},{t:"Reported / school",num:true},{t:"Floor m² / structure",num:true},{t:"Floor m² / school",num:true},{t:"Wall m² / school",num:true},{t:"Volume m³ / school",num:true}], [
@@ -94,6 +97,34 @@
           <div class="scroll" id="pl-district"></div></div>
       </div>
       <div class="card" style="margin-top:12px"><h3>Schools <span class="sub">Per-school space with the current type selection · click a heading to sort</span></h3><div class="scroll" id="pl-schools-table"></div></div>`;
+
+    const drawHeights = () => {
+      const pick = r => P.hType === "dorms" ? isDorm(r) : P.hType === "classes" ? isClass(r) : true;
+      const all = schools.flatMap(s => (s.G?.repeats?.[REPEAT] || []).filter(r => pick(r) && isNum(r.structure_height) && r.structure_height > 0).map(r => ({ h: r.structure_height, school: s.name, cat: r.structure_category })));
+      const ok = all.filter(x => x.h <= P.maxH), out = all.filter(x => x.h > P.maxH);
+      const d = describe(ok.map(x => x.h));
+      if (!d) { $("#pl-heights").innerHTML = `<p class="empty">No heights recorded for this selection.</p>`; return; }
+      const f1 = v => isNum(v) ? (Math.round(v * 10) / 10).toFixed(1) : "—";
+      const edges = []; for (let e = Math.floor(d.min * 2) / 2; e < d.max + 0.5; e += 0.5) edges.push(e);
+      const bins = edges.map(e => ({ label: `${f1(e)}–${f1(e + 0.5)} m`, value: ok.filter(x => x.h >= e && x.h < e + 0.5).length }));
+      const bySchool = new Map(); ok.forEach(x => { const a = bySchool.get(x.school) || []; a.push(x.h); bySchool.set(x.school, a); });
+      const schoolMeans = [...bySchool.values()].map(mean);
+      $("#pl-heights").innerHTML = `
+        <div class="tiles">
+          ${tile("Structures", num(ok.length), `${num(bySchool.size)} schools · ${P.hType === "all" ? "all categories" : P.hType}`)}
+          ${tile("Minimum", `${f1(d.min)}<span class="unit">m</span>`)}
+          ${tile("Median", `${f1(d.median)}<span class="unit">m</span>`, `p10–p90 ${f1(d.p10)}–${f1(d.p90)} m`)}
+          ${tile("Mean", `${f1(d.mean)}<span class="unit">m</span>`, `school means ${f1(Math.min(...schoolMeans))}–${f1(Math.max(...schoolMeans))} m`)}
+          ${tile("Maximum", `${f1(d.max)}<span class="unit">m</span>`, `within the ${P.maxH} m plausibility limit`)}
+          ${tile("Excluded as implausible", num(out.length), out.length ? `heights ${f1(Math.min(...out.map(x => x.h)))}–${f1(Math.max(...out.map(x => x.h)))} m, above ${P.maxH} m · ${[...new Set(out.map(x => x.school))].slice(0, 3).map(esc).join(", ")}${new Set(out.map(x => x.school)).size > 3 ? ", …" : ""}` : `none above ${P.maxH} m`)}
+        </div>
+        <div class="grid-2" style="margin-top:8px">
+          <div><h4 class="meta" style="margin:4px 0">Distribution (0.5 m bins)</h4>${barList(bins, { color: "var(--series-3)" })}</div>
+          <div><h4 class="meta" style="margin:4px 0">Lowest and highest school means</h4>${barList([...bySchool].map(([school, hs]) => ({ label: school, value: mean(hs), note: `· ${hs.length} structures` })).sort((a, b) => a.value - b.value).filter((x, i, a) => i < 5 || i >= a.length - 5).map(x => ({ ...x })), { fmt: v => f1(v) + " m", color: "var(--series-1)" })}</div>
+        </div>`;
+    };
+    drawHeights();
+    wireToggles("pl-htype", k => { P.hType = k; save(); drawHeights(); });
 
     // wiring
     const re = () => { save(); render(); };

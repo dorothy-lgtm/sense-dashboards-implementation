@@ -106,6 +106,9 @@ SURVEYS = {
         {"type": "select_one", "name": "wall_material", "$xpath": "Classrooms_dormitories_grp/wall_material", "label": ["Wall material"], "select_from_list_name": "walls"},
         {"type": "select_one", "name": "roof_material", "$xpath": "Classrooms_dormitories_grp/roof_material", "label": ["Roof material"], "select_from_list_name": "roofs"},
         {"type": "integer", "name": "dormitory_capacity", "$xpath": "Classrooms_dormitories_grp/dormitory_capacity", "label": ["Dormitory capacity (beds)"]},
+    {"type": "decimal", "name": "structure_length", "$xpath": "Classrooms_dormitories_grp/structure_length", "label": ["Length (m)"]},
+    {"type": "decimal", "name": "structure_width", "$xpath": "Classrooms_dormitories_grp/structure_width", "label": ["Width (m)"]},
+    {"type": "decimal", "name": "structure_height", "$xpath": "Classrooms_dormitories_grp/structure_height", "label": ["Height (m)"]},
         {"type": "select_one", "name": "presence_open_eaves", "$xpath": "Classrooms_dormitories_grp/presence_open_eaves", "label": ["Open eaves"], "select_from_list_name": "yn"},
         {"type": "select_one", "name": "screened_windows", "$xpath": "Classrooms_dormitories_grp/screened_windows", "label": ["Screened windows"], "select_from_list_name": "yn"},
         {"type": "select_one", "name": "bednets_hung", "$xpath": "Classrooms_dormitories_grp/bednets_hung", "label": ["Bed nets hung"], "select_from_list_name": "yn"},
@@ -318,6 +321,8 @@ def build():
                           "Classrooms_dormitories_grp": [{"Classrooms_dormitories_grp/structure_category": random.choice(["dormitory", "dormitory", "classroom", "quarters"]),
                                                           "Classrooms_dormitories_grp/wall_material": random.choice(["brick", "mud", "concrete"]), "Classrooms_dormitories_grp/roof_material": random.choice(["iron_sheets", "tiles", "thatch"]),
                                                           "Classrooms_dormitories_grp/dormitory_capacity": random.randint(20, 120), "Classrooms_dormitories_grp/presence_open_eaves": random.choice(["yes", "no"]),
+                                                          "Classrooms_dormitories_grp/structure_length": round(random.uniform(8, 30), 1), "Classrooms_dormitories_grp/structure_width": round(random.uniform(5, 12), 1),
+                                                          "Classrooms_dormitories_grp/structure_height": random.choice([2.4, 2.7, 2.8, 3.0, 3.0, 3.2, 3.5, 3.8, 4.0, 4.5, 9.0]),
                                                           "Classrooms_dormitories_grp/screened_windows": random.choice(["yes", "no"]), "Classrooms_dormitories_grp/bednets_hung": random.choice(["yes", "no"])} for _ in range(random.randint(1, 4))],
                           "Respondent_signature_grp/data_officer": random.choice(OFFICERS).lower(), "_attachments": [], "_geolocation": [None, None]})
     # G in two parts for one school (different days, different blocks) plus one exact re-send
